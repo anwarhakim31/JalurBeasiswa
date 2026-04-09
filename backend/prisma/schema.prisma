@@ -1,0 +1,110 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "postgresql" 
+ 
+}
+
+
+model Pengguna{
+  nim       String @id @unique @db.VarChar(32)
+  email     String
+  fullname  String?
+  password  String
+  photo     String?
+  status    UserStatus @default(PENDING)
+  isAdmin   Boolean @default(false)
+
+  alternatif Alternatif[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Beasiswa {
+  id          String   @id @default(cuid())
+  name        String
+  desription  String
+  period      String   // contoh: "2026"
+  isActive    Boolean  @default(true)
+
+  alternatif  Alternatif[]
+  kriteria   Kriteria[]
+
+  hasil Hasil[]
+
+  createdAt    DateTime @default(now())
+}
+
+model Kriteria {
+  id        String   @id @default(cuid())
+  name      String   // IPK, Penghasilan, dll
+  type      creteriaType   // "benefit" | "cost"
+  weight    Float
+
+  beasiswaId     String
+  beasiswa    Beasiswa      @relation(fields: [beasiswaId], references: [id])
+
+  values    AlternativeValue[]
+}
+
+model Alternatif {
+  id          String   @id @default(cuid())
+  beasiswaId  String
+  fullnamme   String
+  nim         String
+  prodi       String
+  angkatan    String
+
+  values      AlternativeValue[]
+
+  pengguna    Pengguna      @relation(fields: [nim], references: [nim])
+  beasiswa    Beasiswa  @relation(fields: [beasiswaId], references: [id])
+
+  hasil Hasil[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([nim, beasiswaId]) // 1 nim hanya bisa daftar 1x per periode
+}
+
+model AlternativeValue {
+  id            String   @id @default(cuid())
+  value         Float
+
+  alternativeId String
+  kriteriaId    String
+
+  alternatif  Alternatif    @relation(fields: [alternativeId], references: [id])
+  kriteria      Kriteria    @relation(fields: [kriteriaId], references: [id])
+
+  @@unique([alternativeId, kriteriaId]) // biar tidak double
+}
+
+model Hasil {
+  id            String @id @default(cuid())
+  score         Float
+  rank          Int
+
+  alternativeId String
+  beasiswaId    String
+
+  alternatif    Alternatif @relation(fields: [alternativeId], references: [id])
+  beasiswa      Beasiswa   @relation(fields: [beasiswaId], references: [id])
+
+  @@unique([alternativeId, beasiswaId]) // 1 alternatif hanya 1 hasil per beasiswa
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+
+enum creteriaType {
+  BENEFIT
+  COST
+}
