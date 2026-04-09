@@ -119,7 +119,7 @@ export class AuthService {
 
     const user = await this.prismaService.pengguna.findFirst({
       where: {
-        OR: [{ email: forgetRequest.email }, { nim: forgetRequest.nim }],
+        AND: [{ email: forgetRequest.email }, { nim: forgetRequest.nim }],
       },
     });
 
