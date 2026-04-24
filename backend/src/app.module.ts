@@ -6,9 +6,10 @@ import { PhotoController } from './photo/photo.controller';
 import { PhotoModule } from './photo/photo.module';
 import { BeasiswaModule } from './beasiswa/beasiswa.module';
 import { AlternativeModule } from './alternative/alternative.module';
+import { CreteriaModule } from './creteria/creteria.module';
 
 @Module({
-  imports: [UserModule, CommonModule, AuthModule, PhotoModule, BeasiswaModule, AlternativeModule],
+  imports: [UserModule, CommonModule, AuthModule, PhotoModule, BeasiswaModule, AlternativeModule, CreteriaModule],
   controllers: [PhotoController],
   providers: [],
 })
