@@ -23,7 +23,8 @@
     "strict": true,
     "esModuleInterop": true,
     "rootDir": "./src",
-    "types": ["node"]
+    "types": ["node"],
+    "ignoreDeprecations": "5.0"
   },
   "include": ["src/**/*.ts", "src/prisma.config.ts"]
 }

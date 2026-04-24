@@ -6,16 +6,25 @@ import {
 } from '@nestjs/common';
 import { ZodError } from 'zod';
 
-@Catch(ZodError, HttpException)
+@Catch(ZodError, HttpException, Error)
 export class ErrorFilter implements ExceptionFilter {
   catch(exception: any, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse();
 
     if (exception instanceof HttpException) {
+      const res = exception.getResponse();
+      const data = typeof res === 'string' ? { message: res } : res;
+
       response.status(exception.getStatus()).json({
         success: false,
         code: exception.getStatus(),
-        message: exception.message,
+        message: (data as { message: string }).message,
+        errors: [
+          {
+            path: (data as { path: string[] }).path || [],
+            message: (data as { message: string }).message,
+          },
+        ],
       });
     } else if (exception instanceof ZodError) {
       response.status(400).json({

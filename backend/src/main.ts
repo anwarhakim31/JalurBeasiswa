@@ -19,6 +19,7 @@ async function bootstrap() {
       'Access-Control-Allow-Credentials',
       'Access-Control-Allow-Methods',
       'Access-Control-Allow-Headers',
+      'Cache-Control',
     ],
   });
 

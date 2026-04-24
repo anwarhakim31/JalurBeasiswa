@@ -25,12 +25,12 @@ export class AuthService {
 
     const userExits = await this.prismaService.pengguna.findFirst({
       where: {
-        nim: registerRequest.nim,
+        OR: [{ email: registerRequest.email }, { nim: registerRequest.nim }],
       },
     });
 
-    if (userExits && userExits.status === 'ACTIVE') {
-      throw new HttpException('NIM sudah digunakan', 400);
+    if (userExits && userExits.status === 'ACCEPT') {
+      throw new HttpException('NIM atau email sudah digunakan', 400);
     }
 
     if (userExits && userExits.status === 'PENDING') {

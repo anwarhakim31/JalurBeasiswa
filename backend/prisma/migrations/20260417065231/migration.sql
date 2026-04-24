@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "UserStatus" AS ENUM ('PENDING', 'ACTIVE', 'REJECTED');
+CREATE TYPE "UserStatus" AS ENUM ('ACCEPT', 'PENDING', 'REJECTED');
 
 -- CreateEnum
 CREATE TYPE "creteriaType" AS ENUM ('BENEFIT', 'COST');
@@ -56,13 +56,13 @@ CREATE TABLE "Alternatif" (
 );
 
 -- CreateTable
-CREATE TABLE "AlternativeValue" (
+CREATE TABLE "nilaiAlternatif" (
     "id" TEXT NOT NULL,
     "value" DOUBLE PRECISION NOT NULL,
     "alternativeId" TEXT NOT NULL,
     "kriteriaId" TEXT NOT NULL,
 
-    CONSTRAINT "AlternativeValue_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "nilaiAlternatif_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -83,7 +83,7 @@ CREATE UNIQUE INDEX "Pengguna_nim_key" ON "Pengguna"("nim");
 CREATE UNIQUE INDEX "Alternatif_nim_beasiswaId_key" ON "Alternatif"("nim", "beasiswaId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "AlternativeValue_alternativeId_kriteriaId_key" ON "AlternativeValue"("alternativeId", "kriteriaId");
+CREATE UNIQUE INDEX "nilaiAlternatif_alternativeId_kriteriaId_key" ON "nilaiAlternatif"("alternativeId", "kriteriaId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Hasil_alternativeId_beasiswaId_key" ON "Hasil"("alternativeId", "beasiswaId");
@@ -98,10 +98,10 @@ ALTER TABLE "Alternatif" ADD CONSTRAINT "Alternatif_nim_fkey" FOREIGN KEY ("nim"
 ALTER TABLE "Alternatif" ADD CONSTRAINT "Alternatif_beasiswaId_fkey" FOREIGN KEY ("beasiswaId") REFERENCES "Beasiswa"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "AlternativeValue" ADD CONSTRAINT "AlternativeValue_alternativeId_fkey" FOREIGN KEY ("alternativeId") REFERENCES "Alternatif"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "nilaiAlternatif" ADD CONSTRAINT "nilaiAlternatif_alternativeId_fkey" FOREIGN KEY ("alternativeId") REFERENCES "Alternatif"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "AlternativeValue" ADD CONSTRAINT "AlternativeValue_kriteriaId_fkey" FOREIGN KEY ("kriteriaId") REFERENCES "Kriteria"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "nilaiAlternatif" ADD CONSTRAINT "nilaiAlternatif_kriteriaId_fkey" FOREIGN KEY ("kriteriaId") REFERENCES "Kriteria"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Hasil" ADD CONSTRAINT "Hasil_alternativeId_fkey" FOREIGN KEY ("alternativeId") REFERENCES "Alternatif"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
