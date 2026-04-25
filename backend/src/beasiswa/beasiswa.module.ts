@@ -4,6 +4,6 @@ import { BeasiswaService } from './beasiswa.service';
 
 @Module({
   controllers: [BeasiswaController],
-  providers: [BeasiswaService]
+  providers: [BeasiswaService],
 })
 export class BeasiswaModule {}

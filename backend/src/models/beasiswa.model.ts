@@ -1,9 +1,3 @@
-export class ReqEditBeasiswa {
-  fullname?: string;
-  photo?: string;
-  email: string;
-}
-
 export class ReqGetAllBeasiswa {
   page?: number;
   search?: string;
@@ -12,6 +6,7 @@ export class ReqGetAllBeasiswa {
 }
 
 export class ReqPutBeasiswa {
+  code: string;
   name: string;
   description: string;
   period: string;
@@ -19,6 +14,7 @@ export class ReqPutBeasiswa {
 }
 
 export class ReqPostBeasiswa {
+  code: string;
   name: string;
   description: string;
   period: string;
@@ -31,6 +27,7 @@ export class ReqDeleteBeasiswa {
 
 export class BeasiswaResponse {
   id: string;
+  code: string;
   name: string;
   description: string;
   period: string;

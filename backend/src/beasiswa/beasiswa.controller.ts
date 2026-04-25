@@ -54,6 +54,21 @@ export class BeasiswaController {
     };
   }
 
+  @UseGuards(AuthGuard, AdminGuard)
+  @HttpCode(200)
+  @Get('/:code/detail')
+  async getByCode(
+    @Param('code') code: string,
+  ): Promise<WebResponse<BeasiswaResponse>> {
+    const result = await this.beasiswaService.getByCode(code);
+
+    return {
+      data: result,
+      success: true,
+      message: 'Berhasil mendapatkan data pengguna',
+    };
+  }
+
   @Get('/select')
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
@@ -72,9 +87,9 @@ export class BeasiswaController {
       success: true,
       message: 'Berhasil mengambil data beasiswa',
       data: res.data.map((item) => ({
-        id: item.id,
+        id: item.code,
         label: item.name,
-        value: item.id,
+        value: item.code,
       })),
     };
   }
@@ -84,7 +99,7 @@ export class BeasiswaController {
   @UseGuards(AuthGuard, AdminGuard)
   async create(
     @Body() request: ReqPostBeasiswa,
-  ): Promise<WebResponse<{ name: string }>> {
+  ): Promise<WebResponse<BeasiswaResponse>> {
     const res = await this.beasiswaService.create(request);
 
     return {
@@ -94,14 +109,14 @@ export class BeasiswaController {
     };
   }
 
-  @Put('/:id/update')
+  @Put('/:code/update')
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
   async update(
     @Body() request: ReqPutBeasiswa,
-    @Param('id') id: string,
-  ): Promise<WebResponse<{ name: string }>> {
-    const res = await this.beasiswaService.update(request, id);
+    @Param('code') code: string,
+  ): Promise<WebResponse<BeasiswaResponse>> {
+    const res = await this.beasiswaService.update(request, code);
     return {
       success: true,
       message: 'Berhasil mengubah data beasiswa',
@@ -114,7 +129,7 @@ export class BeasiswaController {
   @UseGuards(AuthGuard, AdminGuard)
   async delete(
     @Body() request: ReqDeleteBeasiswa,
-  ): Promise<WebResponse<{ name: string }>> {
+  ): Promise<WebResponse<BeasiswaResponse>> {
     await this.beasiswaService.delete(request);
     return {
       success: true,
@@ -122,15 +137,14 @@ export class BeasiswaController {
     };
   }
 
-  @Patch('/:id/status')
+  @Patch('/:code/status')
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
   async changeStatus(
-    @Param('id') id: string,
+    @Param('code') code: string,
     @Body() request: { isActive: boolean },
   ): Promise<WebResponse<{ name: string }>> {
-    console.log(request);
-    const res = await this.beasiswaService.changeStatus(request, id);
+    const res = await this.beasiswaService.changeStatus(request, code);
 
     return {
       success: true,

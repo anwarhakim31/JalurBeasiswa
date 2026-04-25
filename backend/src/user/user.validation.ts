@@ -50,7 +50,6 @@ export class UserValidation {
       ),
     batch: z
       .number()
-
       .max(9999, 'Tahun angkatan maksimal 9999')
       .nullable()
       .optional()

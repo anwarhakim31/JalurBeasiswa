@@ -33,6 +33,12 @@ export class BeasiswaService {
       filter.push({
         OR: [
           {
+            code: {
+              contains: getReq.search,
+              mode: 'insensitive',
+            },
+          },
+          {
             name: {
               contains: getReq.search,
               mode: 'insensitive',
@@ -69,6 +75,15 @@ export class BeasiswaService {
       orderBy: {
         createdAt: 'desc',
       },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        description: true,
+        period: true,
+        isActive: true,
+        createdAt: true,
+      },
     });
 
     const total = await this.prismaService.beasiswa.count({
@@ -86,6 +101,35 @@ export class BeasiswaService {
         total: total,
       },
     };
+  }
+
+  async getByCode(code: string): Promise<BeasiswaResponse> {
+    const beasiswa = await this.prismaService.beasiswa.findUnique({
+      where: {
+        code: code,
+      },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        description: true,
+        period: true,
+        isActive: true,
+        createdAt: true,
+      },
+    });
+
+    if (!beasiswa) {
+      throw new HttpException(
+        {
+          message: 'Beasiswa tidak ditemukan',
+          path: ['code'],
+        },
+        404,
+      );
+    }
+
+    return beasiswa;
   }
 
   async getForSelect(
@@ -108,7 +152,7 @@ export class BeasiswaService {
             },
           },
           {
-            id: {
+            code: {
               contains: getReq.search,
               mode: 'insensitive',
             },
@@ -140,6 +184,22 @@ export class BeasiswaService {
       request,
     ) as ReqPostBeasiswa;
 
+    const isExistCode = await this.prismaService.beasiswa.findUnique({
+      where: {
+        code: ReqPost.code,
+      },
+    });
+
+    if (isExistCode) {
+      throw new HttpException(
+        {
+          message: 'Beasiswa dengan kode tersebut sudah ada',
+          field: ['code'],
+        },
+        400,
+      );
+    }
+
     const isExist = await this.prismaService.beasiswa.findFirst({
       where: {
         name: ReqPost.name,
@@ -149,10 +209,7 @@ export class BeasiswaService {
 
     if (isExist) {
       throw new HttpException(
-        {
-          message: 'Nama beasiswa dengan periode yang sama sudah ada',
-          path: ['name'],
-        },
+        'Beasiswa dengan nama dan periode tersebut sudah ada',
         400,
       );
     }
@@ -160,15 +217,26 @@ export class BeasiswaService {
     const result = await this.prismaService.beasiswa.create({
       data: {
         id: nanoid(8),
+        code: ReqPost.code,
         name: ReqPost.name,
         description: ReqPost.description,
         period: ReqPost.period,
         isActive: ReqPost.isActive,
       },
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        description: true,
+        period: true,
+        isActive: true,
+        createdAt: true,
+      },
     });
 
     return {
       id: result.id,
+      code: result.code,
       name: result.name,
       description: result.description,
       period: result.period,
@@ -176,7 +244,10 @@ export class BeasiswaService {
       createdAt: result.createdAt,
     };
   }
-  async update(request: ReqPutBeasiswa, id: string): Promise<BeasiswaResponse> {
+  async update(
+    request: ReqPutBeasiswa,
+    code: string,
+  ): Promise<BeasiswaResponse> {
     const ReqPost: ReqPutBeasiswa = this.validationService.validate(
       BeasiswaValidation.PUT,
       request,
@@ -184,7 +255,7 @@ export class BeasiswaService {
 
     const notFoud = await this.prismaService.beasiswa.findUnique({
       where: {
-        id: id,
+        code: code,
       },
     });
 
@@ -195,33 +266,50 @@ export class BeasiswaService {
       );
     }
 
+    const isExistCode = await this.prismaService.beasiswa.findUnique({
+      where: {
+        code: ReqPost.code,
+        NOT: {
+          code: code,
+        },
+      },
+    });
+
+    if (isExistCode) {
+      throw new HttpException(
+        {
+          message: 'Beasiswa dengan kode tersebut sudah ada',
+          field: ['code'],
+        },
+        400,
+      );
+    }
+
     const isExist = await this.prismaService.beasiswa.findFirst({
       where: {
         name: ReqPost.name,
         period: ReqPost.period,
         NOT: {
-          id: id,
+          code: code,
         },
       },
     });
 
     if (isExist) {
       throw new HttpException(
-        {
-          message: 'Nama beasiswa dengan periode yang sama sudah ada',
-          path: ['name'],
-        },
+        'Beasiswa dengan nama dan periode tersebut sudah ada',
         400,
       );
     }
 
     const result = await this.prismaService.beasiswa.update({
       where: {
-        id: id,
+        code: code,
       },
       data: {
         name: ReqPost.name,
         description: ReqPost.description,
+        code: ReqPost.code,
         period: ReqPost.period,
         isActive: ReqPost.isActive,
       },
@@ -229,6 +317,7 @@ export class BeasiswaService {
 
     return {
       id: result.id,
+      code: result.code,
       name: result.name,
       description: result.description,
       period: result.period,
@@ -239,7 +328,7 @@ export class BeasiswaService {
   async delete(request: ReqDeleteBeasiswa) {
     const beasiswa = await this.prismaService.beasiswa.findMany({
       where: {
-        id: {
+        code: {
           in: request.selected,
         },
       },
@@ -251,7 +340,7 @@ export class BeasiswaService {
 
     const deleteBeasiswa = await this.prismaService.beasiswa.deleteMany({
       where: {
-        id: {
+        code: {
           in: request.selected,
         },
       },
@@ -265,7 +354,7 @@ export class BeasiswaService {
 
     return deleteBeasiswa;
   }
-  async changeStatus(request: { isActive: boolean }, id: string) {
+  async changeStatus(request: { isActive: boolean }, code: string) {
     const reqStatus = this.validationService.validate(
       BeasiswaValidation.STATUS,
       request,
@@ -273,7 +362,7 @@ export class BeasiswaService {
 
     const notFound = await this.prismaService.beasiswa.findUnique({
       where: {
-        id: id,
+        code: code,
       },
     });
     if (!notFound) {
@@ -285,7 +374,7 @@ export class BeasiswaService {
 
     const result = await this.prismaService.beasiswa.update({
       where: {
-        id: id,
+        code: code,
       },
       data: {
         isActive: reqStatus.isActive,

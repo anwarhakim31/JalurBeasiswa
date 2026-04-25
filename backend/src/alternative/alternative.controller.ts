@@ -65,14 +65,14 @@ export class AlternativeController {
     };
   }
 
-  @Put('/:id/update')
+  @Put('/:code/update')
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
   async update(
     @Body() request: ReqPutAlternative,
-    @Param('id') id: string,
+    @Param('code') code: string,
   ): Promise<WebResponse<AlternativeResponse>> {
-    const res = await this.alternativeService.update(request, id);
+    const res = await this.alternativeService.update(request, code);
     return {
       success: true,
       message: 'Berhasil mengubah data beasiswa',

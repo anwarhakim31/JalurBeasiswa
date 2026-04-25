@@ -10,13 +10,15 @@ export class ReqGetAllAlternative {
 }
 
 export class ReqPutAlternative {
+  code: string;
   nim: string;
-  beasiswaId: string;
+  beasiswaCode: string;
 }
 
 export class ReqPostAlternative {
+  code: string;
   nim: string;
-  beasiswaId: string;
+  beasiswaCode: string;
 }
 
 export class ReqDeleteAlternative {
@@ -24,10 +26,11 @@ export class ReqDeleteAlternative {
 }
 
 export class AlternativeResponse {
+  code: string;
   nim: string;
   fullname?: string;
   id: string;
   name?: string;
-  beasiswaId: string;
+  beasiswaCode: string;
   createdAt?: Date;
 }

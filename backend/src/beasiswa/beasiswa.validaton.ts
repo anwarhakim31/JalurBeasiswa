@@ -8,6 +8,10 @@ export class BeasiswaValidation {
     status: z.string().optional(),
   });
   static readonly CREATE: ZodType = z.object({
+    code: z
+      .string()
+      .nonempty('Kode tidak boleh kosong')
+      .max(6, 'Kode maksimal 6 karakter'),
     name: z
       .string()
       .nonempty('Nama tidak boleh kosong')
@@ -23,6 +27,10 @@ export class BeasiswaValidation {
     isActive: z.boolean(),
   });
   static readonly PUT: ZodType = z.object({
+    code: z
+      .string()
+      .nonempty('Kode tidak boleh kosong')
+      .max(6, 'Kode maksimal 6 karakter'),
     name: z
       .string()
       .nonempty('Nama tidak boleh kosong')

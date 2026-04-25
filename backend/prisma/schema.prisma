@@ -28,6 +28,7 @@ model Pengguna{
 
 model Beasiswa {
   id          String   @id @default(cuid())
+  code        String   @unique
   name        String
   description  String
   period      String   // contoh: "2026"
@@ -42,45 +43,49 @@ model Beasiswa {
 }
 
 model Kriteria {
-  id        String   @id @default(cuid())
-  name      String   // IPK, Penghasilan, dll
-  type      creteriaType   // "benefit" | "cost"
-  weight    Float
+  id            String   @id @default(cuid())
+  code          String   @unique
+  name          String   // IPK, Penghasilan, dll
+  type          creteriaType   // "benefit" | "cost"
+  weight        Float
 
-  beasiswaId     String
-  beasiswa    Beasiswa      @relation(fields: [beasiswaId], references: [id] ,onDelete: Cascade)
+  beasiswaCode  String
+  beasiswa      Beasiswa      @relation(fields: [beasiswaCode], references: [code] ,onDelete: Cascade)
 
-  values    NilaiAlternatif[]
+  values        NilaiAlternatif[]
+  createdAt     DateTime @default(now())
 }
 
 model Alternatif {
-  id          String   @id @default(cuid())
-  beasiswaId  String
-  nim         String
+  id            String   @id @default(cuid())
+  code          String   @unique
+  beasiswaCode  String
+  nim           String
 
-  values      NilaiAlternatif[]
+  values        NilaiAlternatif[]
 
-  pengguna    Pengguna      @relation(fields: [nim], references: [nim],onDelete: Cascade)
-  beasiswa    Beasiswa  @relation(fields: [beasiswaId], references: [id], onDelete: Cascade)
+  pengguna      Pengguna  @relation(fields: [nim], references: [nim],onDelete: Cascade)
+  beasiswa      Beasiswa  @relation(fields: [beasiswaCode], references: [code], onDelete: Cascade)
 
-  hasil Hasil[]
+  hasil         Hasil[]
 
-  createdAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
 
-  @@unique([nim, beasiswaId]) // 1 nim hanya bisa daftar 1x per periode
+  @@unique([nim, beasiswaCode]) // 1 nim hanya bisa daftar 1x per periode
 }
 
 model NilaiAlternatif {
   id            String   @id @default(cuid())
   value         Float
 
-  alternativeId String
-  kriteriaId    String
+  alternativeCode String
+  kriteriaCode    String
 
-  alternatif  Alternatif    @relation(fields: [alternativeId], references: [id],onDelete: Cascade)
-  kriteria      Kriteria    @relation(fields: [kriteriaId], references: [id],onDelete: Cascade)
+  alternatif  Alternatif    @relation(fields: [alternativeCode], references: [code],onDelete: Cascade)
+  kriteria      Kriteria    @relation(fields: [kriteriaCode], references: [code],onDelete: Cascade)
 
-  @@unique([alternativeId, kriteriaId]) // biar tidak double
+  @@unique([alternativeCode, kriteriaCode]) // biar tidak double
 }
 
 model Hasil {
@@ -88,13 +93,13 @@ model Hasil {
   score         Float
   rank          Int
 
-  alternativeId String
-  beasiswaId    String
+  alternativeCode String
+  beasiswaCode    String
 
-  alternatif    Alternatif @relation(fields: [alternativeId], references: [id],onDelete: Cascade)
-  beasiswa      Beasiswa   @relation(fields: [beasiswaId], references: [id],onDelete: Cascade)
+  alternatif    Alternatif @relation(fields: [alternativeCode], references: [code],onDelete: Cascade)
+  beasiswa      Beasiswa   @relation(fields: [beasiswaCode], references: [code],onDelete: Cascade)
 
-  @@unique([alternativeId, beasiswaId]) // 1 alternatif hanya 1 hasil per beasiswa
+  @@unique([alternativeCode, beasiswaCode]) // 1 alternatif hanya 1 hasil per beasiswa
 }
 
 enum UserStatus {
