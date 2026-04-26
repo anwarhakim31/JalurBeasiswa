@@ -6,17 +6,19 @@ export class ReqGetAllCriteria {
 }
 
 export class ReqPutCriteria {
+  code: string;
   name: string;
   type: string;
   weight: number;
-  beasiswaId: string;
+  beasiswaCode: string;
 }
 
 export class ReqPostCriteria {
+  code: string;
   name: string;
   type: string;
   weight: number;
-  beasiswaId: string;
+  beasiswaCode: string;
 }
 
 export class ReqDeleteCriteria {
@@ -26,8 +28,9 @@ export class ReqDeleteCriteria {
 export class CriteriaResponse {
   id: string;
   name: string;
-  weight: string;
+  code: string;
+  weight: number;
   type: string;
-  beasiswaId: string;
+  beasiswaCode: string;
   createdAt: Date;
 }

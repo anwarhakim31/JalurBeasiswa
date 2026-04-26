@@ -54,6 +54,9 @@ model Kriteria {
 
   values        NilaiAlternatif[]
   createdAt     DateTime @default(now())
+
+
+
 }
 
 model Alternatif {
@@ -72,7 +75,7 @@ model Alternatif {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @default(now())
 
-  @@unique([nim, beasiswaCode]) // 1 nim hanya bisa daftar 1x per periode
+  @@unique([nim, beasiswaCode]) 
 }
 
 model NilaiAlternatif {

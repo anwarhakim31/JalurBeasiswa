@@ -1,12 +1,17 @@
 import { HttpException, Injectable } from '@nestjs/common';
 
-import * as bcrypt from 'bcrypt';
 import { Paging } from '../models/web.model';
 import { ValidationService } from '../common/validation.service';
 import { PrismaService } from '../common/prisma.service';
 import { CrteriaValidation } from './criteria.validation';
-import { UserStatus } from '@prisma/client';
-import { CriteriaResponse, ReqGetAllCriteria } from '../models/criteria.model';
+import { creteriaType } from '@prisma/client';
+import {
+  CriteriaResponse,
+  ReqDeleteCriteria,
+  ReqGetAllCriteria,
+  ReqPostCriteria,
+  ReqPutCriteria,
+} from '../models/criteria.model';
 
 @Injectable()
 export class CriteriaService {
@@ -14,93 +19,81 @@ export class CriteriaService {
     private validationService: ValidationService,
     private prismaService: PrismaService,
   ) {}
-  // async getAll(
-  //   request: ReqGetAllCriteria,
-  // ): Promise<{ data: CriteriaResponse[]; paging?: Paging }> {
-  //   const getReq: ReqGetAllCriteria = this.validationService.validate(
-  //     CrteriaValidation.GETALL,
-  //     request,
-  //   );
+  async getAll(
+    request: ReqGetAllCriteria,
+  ): Promise<{ data: CriteriaResponse[]; paging?: Paging }> {
+    const getReq: ReqGetAllCriteria = this.validationService.validate(
+      CrteriaValidation.GETALL,
+      request,
+    );
 
-  //   const filter = [];
+    const filter = [];
 
-  //   if (getReq.search) {
-  //     filter.push({
-  //       OR: [
-  //         {
-  //           id: {
-  //             contains: getReq.search,
-  //             mode: 'insensitive',
-  //           },
-  //         },
-  //         {
-  //           name: {
-  //             contains: getReq.search,
-  //             mode: 'insensitive',
-  //           },
-  //         },
-  //         {
-  //           beasiswaId: {
-  //             contains: getReq.search,
-  //             mode: 'insensitive',
-  //           },
-  //         },
-  //         {
-  //           beasiswa: {
-  //             name: {
-  //               contains: getReq.search,
-  //               mode: 'insensitive',
-  //             },
-  //           },
-  //         },
-  //       ],
-  //     });
-  //   }
-  //   if (getReq.type) {
-  //     filter.push({
-  //       type: getReq.type,
-  //     });
-  //   }
+    if (getReq.search) {
+      filter.push({
+        OR: [
+          {
+            code: {
+              contains: getReq.search,
+              mode: 'insensitive',
+            },
+          },
+          {
+            name: {
+              contains: getReq.search,
+              mode: 'insensitive',
+            },
+          },
+          {
+            beasiswa: {
+              name: {
+                contains: getReq.search,
+                mode: 'insensitive',
+              },
+            },
+          },
+          {
+            beasiswaCode: {
+              contains: getReq.search,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      });
+    }
+    if (getReq.type) {
+      filter.push({
+        type: getReq.type,
+      });
+    }
 
-  //   const user = await this.prismaService.kriteria.findMany({
-  //     where: {
-  //       AND: filter,
-  //     },
-  //     skip: (getReq.page - 1) * getReq.limit,
-  //     take: getReq.limit,
-  //     orderBy: {
-  //       createdAt: 'desc',
-  //     },
-  //     select: {
-  //       id: true,
-  //       name: true,
-  //       type: true,
-  //       beasiswaId: true,
-  //       beasiswa: {
-  //         select: {
-  //           name: true,
-  //         },
-  //       },
-  //     },
-  //   });
+    const criteria = await this.prismaService.kriteria.findMany({
+      where: {
+        AND: filter,
+      },
+      skip: (getReq.page - 1) * getReq.limit,
+      take: getReq.limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
-  //   const total = await this.prismaService.pengguna.count({
-  //     where: {
-  //       AND: filter,
-  //       isAdmin: false,
-  //     },
-  //   });
+    const total = await this.prismaService.kriteria.count({
+      where: {
+        AND: filter,
+      },
+    });
 
-  //   return {
-  //     data: user,
-  //     paging: {
-  //       limit: getReq.limit,
-  //       totalPage: Math.ceil(total / getReq.limit),
-  //       page: getReq.page,
-  //       total: total,
-  //     },
-  //   };
-  // }
+    return {
+      data: criteria,
+      paging: {
+        limit: getReq.limit,
+        totalPage: Math.ceil(total / getReq.limit),
+        page: getReq.page,
+        total: total,
+      },
+    };
+  }
 
   // async getForSelect(
   //   request: ReqGetAllUser,
@@ -163,36 +156,6 @@ export class CriteriaService {
   //   };
   // }
 
-  // async getByNIM(nim: string): Promise<UserResponse> {
-  //   const user = await this.prismaService.pengguna.findUnique({
-  //     where: {
-  //       nim: nim,
-  //     },
-  //     select: {
-  //       nim: true,
-  //       email: true,
-  //       status: true,
-  //       fullname: true,
-  //       createdAt: true,
-  //       prodi: true,
-  //       batch: true,
-  //       photo: true,
-  //     },
-  //   });
-
-  //   if (!user) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'pengguna tidak ditemukan',
-  //         path: ['nim'],
-  //       },
-  //       404,
-  //     );
-  //   }
-
-  //   return user;
-  // }
-
   // async delete(request: ReqDeletePengguna) {
   //   const users = await this.prismaService.pengguna.findMany({
   //     where: {
@@ -240,300 +203,155 @@ export class CriteriaService {
   //   return user;
   // }
 
-  // async post(request: ReqPostPengguna) {
-  //   const penggunaReq: ReqPostPengguna = this.validationService.validate(
-  //     CrteriaValidation.CREATE,
-  //     request,
-  //   ) as ReqPostPengguna;
+  async create(request: ReqPostCriteria): Promise<CriteriaResponse> {
+    const criteriaReq: ReqPostCriteria = this.validationService.validate(
+      CrteriaValidation.CREATE,
+      request,
+    ) as ReqPostCriteria;
 
-  //   const statusMap: Record<string, UserStatus> = {
-  //     ACCEPT: UserStatus.ACCEPT,
-  //     PENDING: UserStatus.PENDING,
-  //     REJECTED: UserStatus.REJECTED,
-  //   };
+    const criteriaMap: Record<string, creteriaType> = {
+      BENEFIT: creteriaType.BENEFIT,
+      COST: creteriaType.COST,
+    };
 
-  //   if (!statusMap[penggunaReq.status]) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'Status tidak valid',
-  //         path: ['status'],
-  //       },
-  //       400,
-  //     );
-  //   }
+    if (!criteriaMap[criteriaReq.type]) {
+      throw new HttpException(
+        {
+          message: 'Tipe kriteria tidak ditemukan',
+          path: ['type'],
+        },
+        400,
+      );
+    }
 
-  //   const isExistNim = await this.prismaService.pengguna.findUnique({
-  //     where: {
-  //       nim: penggunaReq.nim,
-  //     },
-  //   });
+    const isExistCode = await this.prismaService.kriteria.findUnique({
+      where: {
+        code: criteriaReq.code,
+      },
+    });
 
-  //   if (isExistNim && isExistNim.nim) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'NIM sudah digunakan',
-  //         path: ['nim'],
-  //       },
-  //       400,
-  //     );
-  //   }
-  //   const isExistEmail = await this.prismaService.pengguna.findFirst({
-  //     where: {
-  //       email: penggunaReq.email,
-  //     },
-  //   });
+    if (isExistCode && isExistCode.code) {
+      throw new HttpException(
+        {
+          message: 'Kode kriteria sudah digunakan',
+          path: ['code'],
+        },
+        400,
+      );
+    }
 
-  //   if (isExistEmail && isExistEmail.email) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'Email sudah digunakan',
-  //         path: ['email'],
-  //       },
-  //       400,
-  //     );
-  //   }
+    const res = await this.prismaService.kriteria.create({
+      data: {
+        code: criteriaReq.code,
+        name: criteriaReq.name,
+        type: criteriaMap[criteriaReq.type],
+        weight: criteriaReq.weight,
+        beasiswaCode: criteriaReq.beasiswaCode,
+      },
+    });
 
-  //   const salt = await bcrypt.genSalt();
-  //   penggunaReq.password = await bcrypt.hash(penggunaReq.password, salt);
+    return res;
+  }
 
-  //   const user = await this.prismaService.pengguna.create({
-  //     data: {
-  //       nim: penggunaReq.nim,
-  //       email: penggunaReq.email,
-  //       password: penggunaReq.password,
-  //       fullname: penggunaReq.fullname,
-  //       status: statusMap[penggunaReq.status],
-  //       prodi: penggunaReq.prodi,
-  //       batch: penggunaReq.batch,
-  //       photo: penggunaReq.photo,
-  //     },
-  //   });
+  async put(request: ReqPutCriteria, code: string): Promise<CriteriaResponse> {
+    const criteriaReq: ReqPutCriteria = this.validationService.validate(
+      CrteriaValidation.PUT,
+      request,
+    ) as ReqPutCriteria;
 
-  //   return user;
-  // }
+    const criteriaMap: Record<string, creteriaType> = {
+      BENEFIT: creteriaType.BENEFIT,
+      COST: creteriaType.COST,
+    };
 
-  // async put(request: ReqPutPengguna) {
-  //   const penggunaReq: ReqPutPengguna = this.validationService.validate(
-  //     CrteriaValidation.PUT,
-  //     request,
-  //   ) as ReqPutPengguna;
+    const notFound = await this.prismaService.kriteria.findUnique({
+      where: {
+        code: code,
+      },
+    });
 
-  //   const statusMap: Record<string, UserStatus> = {
-  //     ACCEPT: UserStatus.ACCEPT,
-  //     PENDING: UserStatus.PENDING,
-  //     REJECTED: UserStatus.REJECTED,
-  //   };
+    if (!notFound) {
+      throw new HttpException(
+        {
+          message: 'Kriteria tidak ditemukan',
+          path: ['code'],
+        },
+        404,
+      );
+    }
 
-  //   if (!statusMap[penggunaReq.status]) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'Status tidak valid',
-  //         path: ['status'],
-  //       },
-  //       400,
-  //     );
-  //   }
+    if (!criteriaMap[criteriaReq.type]) {
+      throw new HttpException(
+        {
+          message: 'Tipe kriteria tidak ditemukan',
+          path: ['type'],
+        },
+        400,
+      );
+    }
 
-  //   const isExist = await this.prismaService.pengguna.findFirst({
-  //     where: {
-  //       OR: [
-  //         {
-  //           email: penggunaReq.email,
-  //         },
-  //         {
-  //           nim: penggunaReq.nim,
-  //         },
-  //       ],
-  //     },
-  //   });
+    const isExistCode = await this.prismaService.kriteria.findUnique({
+      where: {
+        code: criteriaReq.code,
+        NOT: {
+          code: code,
+        },
+      },
+    });
 
-  //   if (!isExist) {
-  //     throw new HttpException('Pengguna tidak ditemukan', 404);
-  //   }
+    if (isExistCode && isExistCode.code) {
+      throw new HttpException(
+        {
+          message: 'Kode kriteria sudah digunakan',
+          path: ['code'],
+        },
+        400,
+      );
+    }
 
-  //   const isExistNim = await this.prismaService.pengguna.findFirst({
-  //     where: {
-  //       nim: penggunaReq.nim,
-  //       NOT: {
-  //         nim: penggunaReq.nim,
-  //       },
-  //     },
-  //   });
+    const res = await this.prismaService.kriteria.update({
+      where: {
+        code: code,
+      },
+      data: {
+        code: criteriaReq.code,
+        name: criteriaReq.name,
+        type: criteriaMap[criteriaReq.type],
+        weight: criteriaReq.weight,
+        beasiswaCode: criteriaReq.beasiswaCode,
+      },
+    });
 
-  //   if (isExistNim) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'NIM sudah digunakan oleh pengguna lain',
-  //         path: ['nim'],
-  //       },
-  //       400,
-  //     );
-  //   }
+    return res;
+  }
 
-  //   const isExistEmail = await this.prismaService.pengguna.findFirst({
-  //     where: {
-  //       email: penggunaReq.email,
-  //       NOT: {
-  //         nim: penggunaReq.nim,
-  //       },
-  //     },
-  //   });
+  async delete(request: ReqDeleteCriteria) {
+    const kriteria = await this.prismaService.kriteria.findMany({
+      where: {
+        code: {
+          in: request.selected,
+        },
+      },
+    });
 
-  //   if (isExistEmail) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'Email sudah digunakan oleh pengguna lain',
-  //         path: ['email'],
-  //       },
-  //       400,
-  //     );
-  //   }
+    if (kriteria.length == 0 || kriteria.length < request.selected.length) {
+      throw new HttpException('kriteria tidak ditemukan', 404);
+    }
 
-  //   const user = await this.prismaService.pengguna.update({
-  //     where: {
-  //       nim: penggunaReq.nim,
-  //     },
-  //     data: {
-  //       nim: penggunaReq.nim,
-  //       email: penggunaReq.email,
-  //       fullname: penggunaReq.fullname,
-  //       status: statusMap[penggunaReq.status],
-  //       prodi: penggunaReq.prodi,
-  //       batch: penggunaReq.batch,
-  //       photo: penggunaReq.photo,
-  //     },
-  //   });
+    const deletKriteria = await this.prismaService.kriteria.deleteMany({
+      where: {
+        code: {
+          in: request.selected,
+        },
+      },
+    });
+    if (
+      deletKriteria.count == 0 ||
+      deletKriteria.count < request.selected.length
+    ) {
+      throw new HttpException('kriteria tidak ditemukan', 404);
+    }
 
-  //   if (penggunaReq.password) {
-  //     const salt = await bcrypt.genSalt();
-  //     penggunaReq.password = await bcrypt.hash(penggunaReq.password, salt);
-
-  //     await this.prismaService.pengguna.update({
-  //       where: {
-  //         nim: penggunaReq.nim,
-  //       },
-  //       data: {
-  //         password: penggunaReq.password,
-  //       },
-  //     });
-  //   }
-
-  //   return user;
-  // }
-
-  // async status(request: { status: string }, nim: string) {
-  //   const statusMap: Record<string, UserStatus> = {
-  //     ACCEPT: UserStatus.ACCEPT,
-  //     PENDING: UserStatus.PENDING,
-  //     REJECTED: UserStatus.REJECTED,
-  //   };
-
-  //   if (!statusMap[request.status]) {
-  //     throw new HttpException('Status tidak valid', 400);
-  //   }
-
-  //   const notFound = await this.prismaService.pengguna.findUnique({
-  //     where: {
-  //       nim: nim,
-  //     },
-  //   });
-
-  //   if (!notFound) {
-  //     throw new HttpException('Pengguna tidak ditemukan', 404);
-  //   }
-
-  //   const user = await this.prismaService.pengguna.update({
-  //     where: {
-  //       nim: nim,
-  //     },
-  //     data: {
-  //       status: statusMap[request.status],
-  //     },
-  //   });
-  //   return user;
-  // }
-  // async editProfile(request: ReqEditUser, nim: string): Promise<UserResponse> {
-  //   const RequestEdit: ReqEditUser = this.validationService.validate(
-  //     CrteriaValidation.EditProfie,
-  //     request,
-  //   ) as ReqEditUser;
-
-  //   const user = await this.prismaService.pengguna.update({
-  //     where: {
-  //       nim: nim,
-  //     },
-  //     data: {
-  //       fullname: RequestEdit.fullname,
-  //       photo: RequestEdit.photo,
-  //       email: RequestEdit.email,
-  //     },
-  //   });
-
-  //   return {
-  //     nim: user.nim,
-  //     fullname: user.fullname,
-  //     photo: user.photo,
-  //     email: user.email,
-  //   };
-  // }
-  // async changePassword(
-  //   nim: string,
-  //   request: ReqEditPassword,
-  // ): Promise<UserResponse> {
-  //   const EditRequest: ReqEditPassword = this.validationService.validate(
-  //     CrteriaValidation.ChangePassword,
-  //     request,
-  //   ) as ReqEditPassword;
-
-  //   const user = await this.prismaService.pengguna.findUnique({
-  //     where: {
-  //       nim: nim,
-  //     },
-  //   });
-
-  //   if (!user) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'pengguna tidak ditemukan',
-  //         path: ['nim'],
-  //       },
-  //       404,
-  //     );
-  //   }
-
-  //   const isPasswordValid = await bcrypt.compare(
-  //     EditRequest.password,
-  //     user.password,
-  //   );
-
-  //   if (!isPasswordValid) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'Kata sandi tidak valid',
-  //         path: ['password'],
-  //       },
-  //       400,
-  //     );
-  //   }
-
-  //   const gensalt = await bcrypt.genSalt(10);
-
-  //   const hashedPassword = await bcrypt.hash(EditRequest.newPassword, gensalt);
-
-  //   const updated = await this.prismaService.pengguna.update({
-  //     where: {
-  //       nim: nim,
-  //     },
-  //     data: {
-  //       password: hashedPassword,
-  //     },
-  //   });
-
-  //   return {
-  //     nim: updated.nim,
-  //     fullname: updated.fullname,
-  //     photo: updated?.photo || null,
-  //     email: updated.email,
-  //   };
-  // }
+    return deletKriteria;
+  }
 }

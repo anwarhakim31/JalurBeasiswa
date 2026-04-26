@@ -12,7 +12,16 @@ export class CrteriaValidation {
     code: z
       .string()
       .nonempty('Kode tidak boleh kosong')
-      .max(5, 'Kode maksimal 5 karakter'),
+      .max(6, 'Kode maksimal 6 karakter')
+      .refine(
+        (val) => {
+          if (!val) return true;
+          return /^[a-zA-Z0-9]+$/.test(val);
+        },
+        {
+          message: 'Kode harus mengandung angka dan huruf',
+        },
+      ),
     name: z
       .string()
       .nonempty('Nama tidak boleh kosong')
@@ -32,7 +41,16 @@ export class CrteriaValidation {
     code: z
       .string()
       .nonempty('Kode tidak boleh kosong')
-      .max(5, 'Kode maksimal 5 karakter'),
+      .max(6, 'Kode maksimal 6 karakter')
+      .refine(
+        (val) => {
+          if (!val) return true;
+          return /^[a-zA-Z0-9]+$/.test(val);
+        },
+        {
+          message: 'Kode harus mengandung angka dan huruf',
+        },
+      ),
     name: z
       .string()
       .nonempty('Nama tidak boleh kosong')

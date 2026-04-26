@@ -54,6 +54,12 @@ export class AlternativeService {
             },
           },
           {
+            beasiswaCode: {
+              contains: getReq.search,
+              mode: 'insensitive',
+            },
+          },
+          {
             beasiswa: {
               name: {
                 contains: getReq.search,
