@@ -54,6 +54,9 @@ model Kriteria {
 
   values        NilaiAlternatif[]
   createdAt     DateTime @default(now())
+
+
+
 }
 
 model Alternatif {
@@ -72,7 +75,7 @@ model Alternatif {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @default(now())
 
-  @@unique([nim, beasiswaCode]) // 1 nim hanya bisa daftar 1x per periode
+  @@unique([nim, beasiswaCode]) 
 }
 
 model NilaiAlternatif {
@@ -85,6 +88,8 @@ model NilaiAlternatif {
   alternatif  Alternatif    @relation(fields: [alternativeCode], references: [code],onDelete: Cascade)
   kriteria      Kriteria    @relation(fields: [kriteriaCode], references: [code],onDelete: Cascade)
 
+  createdAt   DateTime @default(now())
+  
   @@unique([alternativeCode, kriteriaCode]) // biar tidak double
 }
 
@@ -98,6 +103,8 @@ model Hasil {
 
   alternatif    Alternatif @relation(fields: [alternativeCode], references: [code],onDelete: Cascade)
   beasiswa      Beasiswa   @relation(fields: [beasiswaCode], references: [code],onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
 
   @@unique([alternativeCode, beasiswaCode]) // 1 alternatif hanya 1 hasil per beasiswa
 }

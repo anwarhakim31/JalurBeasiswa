@@ -6,13 +6,23 @@ export class CrteriaValidation {
     page: z.number().min(1).optional(),
     limit: z.number().min(10).optional(),
     type: z.string().optional(),
+    beasiswaCode: z.string().optional(),
   });
 
   static readonly CREATE: ZodType = z.object({
     code: z
       .string()
       .nonempty('Kode tidak boleh kosong')
-      .max(5, 'Kode maksimal 5 karakter'),
+      .max(6, 'Kode maksimal 6 karakter')
+      .refine(
+        (val) => {
+          if (!val) return true;
+          return /^[a-zA-Z0-9]+$/.test(val);
+        },
+        {
+          message: 'Kode harus mengandung angka dan huruf',
+        },
+      ),
     name: z
       .string()
       .nonempty('Nama tidak boleh kosong')
@@ -22,17 +32,35 @@ export class CrteriaValidation {
       .nonempty('Tipe tidak boleh kosong')
       .max(125, 'Tipe maksimal 125 karakter'),
     weight: z.number().min(0).max(1),
-    beasiswaId: z
+    beasiswaCode: z
       .string()
-      .nonempty('ID beasiswa tidak boleh kosong')
-      .max(32, 'ID beasiswa maksimal 32 karakter'),
+      .nonempty('Kode tidak boleh kosong')
+      .max(6, 'Kode maksimal 6 karakter')
+      .refine(
+        (val) => {
+          if (!val) return true;
+          return /^[a-zA-Z0-9]+$/.test(val);
+        },
+        {
+          message: 'Kode harus mengandung angka dan huruf',
+        },
+      ),
   });
 
   static readonly PUT: ZodType = z.object({
     code: z
       .string()
       .nonempty('Kode tidak boleh kosong')
-      .max(5, 'Kode maksimal 5 karakter'),
+      .max(6, 'Kode maksimal 6 karakter')
+      .refine(
+        (val) => {
+          if (!val) return true;
+          return /^[a-zA-Z0-9]+$/.test(val);
+        },
+        {
+          message: 'Kode harus mengandung angka dan huruf',
+        },
+      ),
     name: z
       .string()
       .nonempty('Nama tidak boleh kosong')
@@ -42,10 +70,19 @@ export class CrteriaValidation {
       .nonempty('Tipe tidak boleh kosong')
       .max(125, 'Tipe maksimal 125 karakter'),
     weight: z.number().min(0).max(1),
-    beasiswaId: z
+    beasiswaCode: z
       .string()
-      .nonempty('ID beasiswa tidak boleh kosong')
-      .max(32, 'ID beasiswa maksimal 32 karakter'),
+      .nonempty('Kode tidak boleh kosong')
+      .max(6, 'Kode maksimal 6 karakter')
+      .refine(
+        (val) => {
+          if (!val) return true;
+          return /^[a-zA-Z0-9]+$/.test(val);
+        },
+        {
+          message: 'Kode harus mengandung angka dan huruf',
+        },
+      ),
   });
   static readonly TYPE: ZodType = z.object({
     type: z

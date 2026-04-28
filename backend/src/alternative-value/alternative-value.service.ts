@@ -2,82 +2,51 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
 import { ValidationService } from '../common/validation.service';
 
-import { AlternativeValidation } from './alternative.validation';
+import { AlternativeValueValidation } from './alternative-value.validation';
 import { Paging } from '../models/web.model';
 import { nanoid } from 'nanoid';
+
 import {
-  AlternativeResponse,
-  ReqDeleteAlternative,
-  ReqGetAllAlternative,
-  ReqPostAlternative,
-  ReqPutAlternative,
-} from '../models/alternative.model';
+  AlternativeValueResponse,
+  ReqGetAllAlternativeValue,
+} from '../models/alternative-value.model';
 
 @Injectable()
-export class AlternativeService {
+export class AlternativeValueService {
   constructor(
     private prismaService: PrismaService,
     private validationService: ValidationService,
   ) {}
 
   async GetAll(
-    request: ReqGetAllAlternative,
-  ): Promise<{ data: AlternativeResponse[]; paging?: Paging }> {
-    const getReq: ReqGetAllAlternative = this.validationService.validate(
-      AlternativeValidation.GETALL,
+    request: ReqGetAllAlternativeValue,
+  ): Promise<{ data: AlternativeValueResponse[]; paging?: Paging }> {
+    const getReq: ReqGetAllAlternativeValue = this.validationService.validate(
+      AlternativeValueValidation.GETALL,
       request,
-    ) as ReqGetAllAlternative;
+    ) as ReqGetAllAlternativeValue;
 
     const filter = [];
 
-    if (getReq.search) {
+    if (getReq.kriteriaCode) {
       filter.push({
-        OR: [
-          {
-            nim: {
-              contains: getReq.search,
-              mode: 'insensitive',
-            },
-          },
-          {
-            pengguna: {
-              fullname: {
-                contains: getReq.search,
-                mode: 'insensitive',
-              },
-            },
-          },
-          {
-            code: {
-              contains: getReq.search,
-              mode: 'insensitive',
-            },
-          },
-        ],
+        kriteriaCode: getReq.kriteriaCode,
       });
     }
 
-    if (getReq.beasiswaCode) {
+    if (getReq.alternativeCode) {
       filter.push({
-        beasiswaCode: getReq.beasiswaCode,
+        alternativeCode: getReq.alternativeCode,
       });
     }
 
-    const result = await this.prismaService.alternatif.findMany({
+    const result = await this.prismaService.nilaiAlternatif.findMany({
       where: {
         AND: filter,
       },
       include: {
-        pengguna: {
-          select: {
-            fullname: true,
-          },
-        },
-        beasiswa: {
-          select: {
-            name: true,
-          },
-        },
+        kriteria: true,
+        alternatif: true,
       },
       skip: (getReq.page - 1) * getReq.limit,
       take: getReq.limit,
@@ -105,7 +74,7 @@ export class AlternativeService {
 
   async create(request: ReqPostAlternative): Promise<AlternativeResponse> {
     const ReqPost: ReqPostAlternative = this.validationService.validate(
-      AlternativeValidation.CREATE,
+      AlternativeValueValidation.CREATE,
       request,
     ) as ReqPostAlternative;
 
@@ -174,7 +143,7 @@ export class AlternativeService {
     code: string,
   ): Promise<AlternativeResponse> {
     const ReqPost: ReqPutAlternative = this.validationService.validate(
-      AlternativeValidation.PUT,
+      AlternativeValueValidation.PUT,
       request,
     ) as ReqPutAlternative;
 

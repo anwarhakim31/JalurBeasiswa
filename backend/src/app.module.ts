@@ -7,6 +7,7 @@ import { PhotoModule } from './photo/photo.module';
 import { BeasiswaModule } from './beasiswa/beasiswa.module';
 import { AlternativeModule } from './alternative/alternative.module';
 import { CriteriaModule } from './criteria/criteria.module';
+import { AlternativeValueModule } from './alternative-value/alternative-value.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { CriteriaModule } from './criteria/criteria.module';
     BeasiswaModule,
     AlternativeModule,
     CriteriaModule,
+    AlternativeValueModule,
   ],
   controllers: [PhotoController],
   providers: [],
