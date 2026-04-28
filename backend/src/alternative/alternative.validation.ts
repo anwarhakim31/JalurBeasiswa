@@ -6,6 +6,7 @@ export class AlternativeValidation {
     page: z.number().min(1).optional(),
     limit: z.number().min(10).optional(),
     status: z.string().optional(),
+    beasiswaCode: z.string().optional(),
   });
   static readonly CREATE: ZodType = z.object({
     code: z

@@ -3,6 +3,7 @@ export class ReqGetAllCriteria {
   search?: string;
   limit?: number;
   type?: string;
+  beasiswaCode?: string;
 }
 
 export class ReqPutCriteria {

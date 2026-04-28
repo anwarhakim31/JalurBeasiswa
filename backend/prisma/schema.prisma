@@ -88,6 +88,8 @@ model NilaiAlternatif {
   alternatif  Alternatif    @relation(fields: [alternativeCode], references: [code],onDelete: Cascade)
   kriteria      Kriteria    @relation(fields: [kriteriaCode], references: [code],onDelete: Cascade)
 
+  createdAt   DateTime @default(now())
+  
   @@unique([alternativeCode, kriteriaCode]) // biar tidak double
 }
 
@@ -101,6 +103,8 @@ model Hasil {
 
   alternatif    Alternatif @relation(fields: [alternativeCode], references: [code],onDelete: Cascade)
   beasiswa      Beasiswa   @relation(fields: [beasiswaCode], references: [code],onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
 
   @@unique([alternativeCode, beasiswaCode]) // 1 alternatif hanya 1 hasil per beasiswa
 }

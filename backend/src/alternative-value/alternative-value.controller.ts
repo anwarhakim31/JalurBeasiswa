@@ -11,21 +11,20 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { AlternativeService } from './alternative.service';
+import { AlternativeValueService } from './alternative-value.service';
 import { WebResponse } from '../models/web.model';
 import { AdminGuard } from '../guards/admin.guard';
 import { AuthGuard } from '../guards/auth.guard';
 import {
-  AlternativeResponse,
-  ReqDeleteAlternative,
-  ReqGetAllAlternative,
-  ReqPostAlternative,
-  ReqPutAlternative,
-} from '../models/alternative.model';
+  AlternativeValueResponse,
+  ReqGetAllAlternativeValue,
+} from '../models/alternative-value.model';
 
 @Controller('/api/alternative')
 export class AlternativeController {
-  constructor(private readonly alternativeService: AlternativeService) {}
+  constructor(
+    private readonly alternativeValueService: AlternativeValueService,
+  ) {}
 
   @Get('/all')
   @HttpCode(200)
@@ -34,15 +33,17 @@ export class AlternativeController {
     @Query('search') search?: string,
     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
-    @Query('beasiswaCode') beasiswaCode?: string,
-  ): Promise<WebResponse<AlternativeResponse[]>> {
-    const request: ReqGetAllAlternative = {
+    @Query('alternativeCode') alternativeCode?: string,
+    @Query('kriteriaCode') kriteriaCode?: string,
+  ): Promise<WebResponse<AlternativeValueResponse[]>> {
+    const request: ReqGetAllAlternativeValue = {
       search: search || '',
       page: page,
       limit: limit,
-      beasiswaCode: beasiswaCode || '',
+      alternativeCode: alternativeCode || '',
+      kriteriaCode: kriteriaCode || '',
     };
-    const res = await this.alternativeService.GetAll(request);
+    const res = await this.alternativeValueService.GetAll(request);
 
     return {
       success: true,
@@ -57,8 +58,8 @@ export class AlternativeController {
   @UseGuards(AuthGuard, AdminGuard)
   async create(
     @Body() request: ReqPostAlternative,
-  ): Promise<WebResponse<AlternativeResponse>> {
-    const res = await this.alternativeService.create(request);
+  ): Promise<WebResponse<AlternativeValueResponse>> {
+    const res = await this.alternativeValueService.create(request);
 
     return {
       success: true,
@@ -73,8 +74,8 @@ export class AlternativeController {
   async update(
     @Body() request: ReqPutAlternative,
     @Param('code') code: string,
-  ): Promise<WebResponse<AlternativeResponse>> {
-    const res = await this.alternativeService.update(request, code);
+  ): Promise<WebResponse<AlternativeValueResponse>> {
+    const res = await this.alternativeValueService.update(request, code);
     return {
       success: true,
       message: 'Berhasil mengubah data beasiswa',
@@ -88,7 +89,7 @@ export class AlternativeController {
   async delete(
     @Body() request: ReqDeleteAlternative,
   ): Promise<WebResponse<{ name: string }>> {
-    await this.alternativeService.delete(request);
+    await this.alternativeValueService.delete(request);
     return {
       success: true,
       message: 'Berhasil menghapus data beasiswa',

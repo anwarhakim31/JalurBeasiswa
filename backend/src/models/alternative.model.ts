@@ -7,6 +7,7 @@ export class ReqGetAllAlternative {
   page?: number;
   search?: string;
   limit?: number;
+  beasiswaCode?: string;
 }
 
 export class ReqPutAlternative {

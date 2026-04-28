@@ -6,6 +6,7 @@ import {
   HttpCode,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   Query,
@@ -35,12 +36,14 @@ export class CriteriaController {
     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
     @Query('type') type?: string,
+    @Query('beasiswaCode') beasiswaCode?: string,
   ): Promise<WebResponse<CriteriaResponse[]>> {
     const request: ReqGetAllCriteria = {
       search: search || '',
       page: page,
       limit: limit,
       type: type || '',
+      beasiswaCode: beasiswaCode || '',
     };
 
     const res = await this.criteriaService.getAll(request);
@@ -93,6 +96,22 @@ export class CriteriaController {
     return {
       success: true,
       message: 'Berhasil menghapus data beasiswa',
+    };
+  }
+
+  @Patch('/:code/type')
+  @HttpCode(200)
+  @UseGuards(AuthGuard, AdminGuard)
+  async changeType(
+    @Param('code') code: string,
+    @Body() request: { type: string },
+  ): Promise<WebResponse<{ name: string }>> {
+    const res = await this.criteriaService.changeType(request, code);
+
+    return {
+      success: true,
+      message: 'Berhasil mengubah tipe kriteria',
+      data: res,
     };
   }
 }
