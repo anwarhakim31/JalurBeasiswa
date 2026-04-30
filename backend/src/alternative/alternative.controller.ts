@@ -52,6 +52,39 @@ export class AlternativeController {
     };
   }
 
+  @Get('/select')
+  @HttpCode(200)
+  @UseGuards(AuthGuard, AdminGuard)
+  async getForSelect(@Query('search') search?: string): Promise<
+    WebResponse<
+      {
+        alternativeCode: string;
+        alternativeName: string;
+        beasiswaCode: string;
+        beasiswaName: string;
+      }[]
+    >
+  > {
+    const request: ReqGetAllAlternative = {
+      search: search || '',
+      page: 1,
+      limit: 100,
+    };
+
+    const res = await this.alternativeService.getForSelect(request);
+
+    return {
+      success: true,
+      message: 'Berhasil mengambil data alternatif',
+      data: res.map((item) => ({
+        alternativeCode: item.code,
+        alternativeName: item.fullname,
+        beasiswaCode: item.beasiswaCode,
+        beasiswaName: item.name,
+      })),
+    };
+  }
+
   @Post('/create')
   @HttpCode(201)
   @UseGuards(AuthGuard, AdminGuard)

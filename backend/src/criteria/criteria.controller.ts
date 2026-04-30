@@ -56,6 +56,43 @@ export class CriteriaController {
     };
   }
 
+  @Get('/select')
+  @HttpCode(200)
+  @UseGuards(AuthGuard, AdminGuard)
+  async select(
+    @Query('beasiswaCode') beasiswaCode?: string,
+    @Query('search') search?: string,
+  ): Promise<WebResponse<{ id: string; label: string; value: string }[]>> {
+    const res = await this.criteriaService.select(beasiswaCode, search);
+
+    return {
+      success: true,
+      message: 'Berhasil mengambil data kriteria',
+      data: res.map((item) => {
+        return {
+          id: item.code,
+          label: item.name,
+          value: item.code,
+        };
+      }),
+    };
+  }
+
+  @Get('/:beasiswaCode/get')
+  @HttpCode(200)
+  @UseGuards(AuthGuard, AdminGuard)
+  async getByBeasiswaCode(
+    @Param('beasiswaCode') beasiswaCode: string,
+  ): Promise<WebResponse<CriteriaResponse[]>> {
+    const res = await this.criteriaService.getByBeasiswaCode(beasiswaCode);
+
+    return {
+      success: true,
+      message: 'Berhasil mengambil data kriteria',
+      data: res,
+    };
+  }
+
   @Post('/create')
   @HttpCode(201)
   @UseGuards(AuthGuard, AdminGuard)
@@ -95,7 +132,7 @@ export class CriteriaController {
     await this.criteriaService.delete(request);
     return {
       success: true,
-      message: 'Berhasil menghapus data beasiswa',
+      message: 'Berhasil menghapus data kriteria',
     };
   }
 

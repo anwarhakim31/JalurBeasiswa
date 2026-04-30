@@ -65,7 +65,22 @@ export class BeasiswaController {
     return {
       data: result,
       success: true,
-      message: 'Berhasil mendapatkan data pengguna',
+      message: 'Berhasil mendapatkan data beasiswa',
+    };
+  }
+
+  @UseGuards(AuthGuard, AdminGuard)
+  @HttpCode(200)
+  @Get('/:code/alternative')
+  async getByAlternativeCode(
+    @Param('code') code: string,
+  ): Promise<WebResponse<BeasiswaResponse>> {
+    const result = await this.beasiswaService.getByCode(code);
+
+    return {
+      data: result,
+      success: true,
+      message: 'Berhasil mendapatkan data beasiswa',
     };
   }
 

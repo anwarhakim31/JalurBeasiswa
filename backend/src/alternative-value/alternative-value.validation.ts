@@ -5,6 +5,8 @@ export class AlternativeValueValidation {
     search: z.string().optional(),
     page: z.number().min(1).optional(),
     limit: z.number().min(10).optional(),
+    alternativeCode: z.string().optional(),
+    kriteriaCode: z.string().optional(),
   });
   static readonly CREATE: ZodType = z.object({
     alternativeCode: z
