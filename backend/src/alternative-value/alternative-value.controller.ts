@@ -17,11 +17,14 @@ import { AdminGuard } from '../guards/admin.guard';
 import { AuthGuard } from '../guards/auth.guard';
 import {
   AlternativeValueResponse,
+  ReqDeleteAlternativeValue,
   ReqGetAllAlternativeValue,
+  ReqPostAlternativeValue,
+  ReqPutAlternativeValue,
 } from '../models/alternative-value.model';
 
-@Controller('/api/alternative')
-export class AlternativeController {
+@Controller('/api/alternative-value')
+export class AlternativeValueController {
   constructor(
     private readonly alternativeValueService: AlternativeValueService,
   ) {}
@@ -57,8 +60,8 @@ export class AlternativeController {
   @HttpCode(201)
   @UseGuards(AuthGuard, AdminGuard)
   async create(
-    @Body() request: ReqPostAlternative,
-  ): Promise<WebResponse<AlternativeValueResponse>> {
+    @Body() request: ReqPostAlternativeValue,
+  ): Promise<WebResponse<AlternativeValueResponse[]>> {
     const res = await this.alternativeValueService.create(request);
 
     return {
@@ -68,17 +71,36 @@ export class AlternativeController {
     };
   }
 
-  @Put('/:code/update')
+  @Get('/:alternativeCode/detail')
+  @HttpCode(200)
+  @UseGuards(AuthGuard, AdminGuard)
+  async getDetail(@Param('alternativeCode') alternativeCode: string): Promise<
+    WebResponse<{
+      alternativeCode: string;
+      beasiswaCode: string;
+      values: { kriteriaCode: string; kriteriaName: string; value: number }[];
+    }>
+  > {
+    const res = await this.alternativeValueService.getDetail(alternativeCode);
+
+    return {
+      success: true,
+      message: 'Berhasil menambahkan data beasiswa',
+      data: res,
+    };
+  }
+
+  @Put('/update')
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
   async update(
-    @Body() request: ReqPutAlternative,
-    @Param('code') code: string,
-  ): Promise<WebResponse<AlternativeValueResponse>> {
-    const res = await this.alternativeValueService.update(request, code);
+    @Body() request: ReqPutAlternativeValue,
+  ): Promise<WebResponse<AlternativeValueResponse[]>> {
+    const res = await this.alternativeValueService.update(request);
+
     return {
       success: true,
-      message: 'Berhasil mengubah data beasiswa',
+      message: 'Berhasil menambahkan data beasiswa',
       data: res,
     };
   }
@@ -87,7 +109,7 @@ export class AlternativeController {
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
   async delete(
-    @Body() request: ReqDeleteAlternative,
+    @Body() request: ReqDeleteAlternativeValue,
   ): Promise<WebResponse<{ name: string }>> {
     await this.alternativeValueService.delete(request);
     return {

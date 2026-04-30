@@ -169,6 +169,86 @@ export class AlternativeService {
       fullname: result.pengguna.fullname,
     };
   }
+
+  async getForSelect(
+    request: ReqGetAllAlternative,
+  ): Promise<AlternativeResponse[]> {
+    const getReq: ReqGetAllAlternative = this.validationService.validate(
+      AlternativeValidation.GETALL,
+      request,
+    );
+
+    const filter = [];
+
+    if (getReq.search) {
+      filter.push({
+        OR: [
+          {
+            code: {
+              contains: getReq.search,
+              mode: 'insensitive',
+            },
+          },
+          {
+            pengguna: {
+              fullname: {
+                contains: getReq.search,
+                mode: 'insensitive',
+              },
+            },
+          },
+          {
+            beasiswaCode: {
+              contains: getReq.search,
+              mode: 'insensitive',
+            },
+          },
+          {
+            beasiswa: {
+              name: {
+                contains: getReq.search,
+                mode: 'insensitive',
+              },
+            },
+          },
+        ],
+      });
+    }
+
+    const alternatif = await this.prismaService.alternatif.findMany({
+      where: {
+        AND: filter,
+      },
+      include: {
+        pengguna: {
+          select: {
+            fullname: true,
+          },
+        },
+        beasiswa: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      skip: (getReq.page - 1) * getReq.limit,
+      take: getReq.limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return alternatif.map((item) => ({
+      id: item.id,
+      nim: item.nim,
+      fullname: item.pengguna.fullname,
+      code: item.code,
+      name: item.beasiswa.name,
+      beasiswaCode: item.beasiswaCode,
+      createdAt: item.createdAt,
+    }));
+  }
+
   async update(
     request: ReqPutAlternative,
     code: string,

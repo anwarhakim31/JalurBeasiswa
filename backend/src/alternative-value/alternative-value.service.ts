@@ -8,7 +8,10 @@ import { nanoid } from 'nanoid';
 
 import {
   AlternativeValueResponse,
+  ReqDeleteAlternativeValue,
   ReqGetAllAlternativeValue,
+  ReqPostAlternativeValue,
+  ReqPutAlternativeValue,
 } from '../models/alternative-value.model';
 
 @Injectable()
@@ -45,17 +48,34 @@ export class AlternativeValueService {
         AND: filter,
       },
       include: {
-        kriteria: true,
-        alternatif: true,
+        kriteria: {
+          select: {
+            name: true,
+          },
+        },
+        alternatif: {
+          include: {
+            pengguna: {
+              select: {
+                fullname: true,
+              },
+            },
+          },
+        },
       },
       skip: (getReq.page - 1) * getReq.limit,
       take: getReq.limit,
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: [
+        {
+          kriteriaCode: 'desc',
+        },
+        {
+          createdAt: 'desc',
+        },
+      ],
     });
 
-    const total = await this.prismaService.alternatif.count({
+    const total = await this.prismaService.nilaiAlternatif.count({
       where: {
         AND: filter,
       },
@@ -71,146 +91,91 @@ export class AlternativeValueService {
       },
     };
   }
-
-  async create(request: ReqPostAlternative): Promise<AlternativeResponse> {
-    const ReqPost: ReqPostAlternative = this.validationService.validate(
-      AlternativeValueValidation.CREATE,
-      request,
-    ) as ReqPostAlternative;
-
-    const isExistCode = await this.prismaService.alternatif.findUnique({
+  async getDetail(alternativeCode: string): Promise<{
+    alternativeCode: string;
+    beasiswaCode: string;
+    values: {
+      kriteriaCode: string;
+      kriteriaName: string;
+      value: number;
+    }[];
+  }> {
+    const alternative = await this.prismaService.alternatif.findUnique({
       where: {
-        code: ReqPost.code,
+        code: alternativeCode,
+      },
+      select: {
+        code: true,
+        beasiswaCode: true,
       },
     });
 
-    if (isExistCode) {
-      throw new HttpException(
-        {
-          message: 'Alternatif dengan kode tersebut sudah ada',
-          path: ['code'],
-        },
-        400,
-      );
-    }
-
-    const isExist = await this.prismaService.alternatif.findFirst({
-      where: {
-        nim: ReqPost.nim,
-        beasiswaCode: ReqPost.beasiswaCode,
-      },
-    });
-
-    if (isExist) {
-      throw new HttpException(
-        'Alternatif dengan Mahasiswa dan Beasiswa tersebut sudahh terdaftar',
-        400,
-      );
-    }
-
-    const result = await this.prismaService.alternatif.create({
-      data: {
-        id: nanoid(8),
-        code: ReqPost.code,
-        nim: ReqPost.nim,
-        beasiswaCode: ReqPost.beasiswaCode,
-      },
-      include: {
-        beasiswa: {
-          select: {
-            name: true,
-          },
-        },
-        pengguna: {
-          select: {
-            fullname: true,
-          },
-        },
-      },
-    });
-
-    return {
-      id: result.id,
-      code: result.code,
-      name: result.beasiswa.name,
-      nim: result.nim,
-      beasiswaCode: result.beasiswaCode,
-      fullname: result.pengguna.fullname,
-    };
-  }
-  async update(
-    request: ReqPutAlternative,
-    code: string,
-  ): Promise<AlternativeResponse> {
-    const ReqPost: ReqPutAlternative = this.validationService.validate(
-      AlternativeValueValidation.PUT,
-      request,
-    ) as ReqPutAlternative;
-
-    const notFoud = await this.prismaService.alternatif.findUnique({
-      where: {
-        code: code,
-      },
-    });
-
-    if (!notFoud) {
+    if (!alternative) {
       throw new HttpException(
         'Alternatif dengan kode tersebut tidak ditemukan',
         404,
       );
     }
 
-    const isExistCode = await this.prismaService.alternatif.findUnique({
-      where: {
-        code: ReqPost.code,
-        NOT: {
-          code: code,
+    const [res, criteria] = await Promise.all([
+      this.prismaService.nilaiAlternatif.findMany({
+        where: {
+          alternativeCode,
         },
-      },
-    });
-
-    if (isExistCode) {
-      throw new HttpException(
-        {
-          message: 'Alternatif dengan kode tersebut sudah ada',
-          path: ['code'],
-        },
-        400,
-      );
-    }
-
-    const isExist = await this.prismaService.alternatif.findFirst({
-      where: {
-        nim: ReqPost.nim,
-        beasiswaCode: ReqPost.beasiswaCode,
-        NOT: {
-          code: code,
-        },
-      },
-    });
-
-    if (isExist) {
-      throw new HttpException(
-        'Alternatif dengan Mahasiswa dan Beasiswa tersebut sudah terdaftar',
-        400,
-      );
-    }
-
-    const result = await this.prismaService.alternatif.update({
-      where: {
-        code: code,
-      },
-      data: {
-        code: ReqPost.code,
-        nim: ReqPost.nim,
-        beasiswaCode: ReqPost.beasiswaCode,
-      },
-      include: {
-        beasiswa: {
-          select: {
-            name: true,
+        include: {
+          kriteria: {
+            select: {
+              code: true,
+              name: true,
+            },
           },
         },
+      }),
+
+      this.prismaService.kriteria.findMany({
+        where: {
+          beasiswaCode: alternative.beasiswaCode,
+        },
+        select: {
+          code: true,
+          name: true,
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      }),
+    ]);
+
+    const values = criteria.map((item) => {
+      const existing = res.find((nilai) => nilai.kriteriaCode === item.code);
+
+      return {
+        kriteriaCode: item.code,
+        kriteriaName: item.name,
+        value: existing?.value ?? 0,
+      };
+    });
+
+    return {
+      alternativeCode,
+      beasiswaCode: alternative.beasiswaCode,
+      values,
+    };
+  }
+  async create(
+    request: ReqPostAlternativeValue,
+  ): Promise<AlternativeValueResponse[]> {
+    const req = this.validationService.validate(
+      AlternativeValueValidation.CREATE,
+      request,
+    ) as ReqPostAlternativeValue;
+
+    // cek alternatif ada
+    const alternative = await this.prismaService.alternatif.findUnique({
+      where: {
+        code: req.alternativeCode,
+      },
+      include: {
         pengguna: {
           select: {
             fullname: true,
@@ -219,40 +184,200 @@ export class AlternativeValueService {
       },
     });
 
-    return {
-      code: result.code,
-      id: result.id,
-      name: result.beasiswa.name,
-      nim: result.nim,
-      beasiswaCode: result.beasiswaCode,
-      fullname: result.pengguna.fullname,
-    };
-  }
-  async delete(request: ReqDeleteAlternative) {
-    const alternatif = await this.prismaService.alternatif.findMany({
+    if (!alternative) {
+      throw new HttpException('Alternatif tidak ditemukan', 404);
+    }
+
+    const criteriaCodes = req.values.map((item) => item.kriteriaCode);
+
+    // cek duplicate dalam payload
+    const uniqueCodes = new Set(criteriaCodes);
+    if (uniqueCodes.size !== criteriaCodes.length) {
+      throw new HttpException(
+        'Kriteria tidak boleh duplikat dalam request',
+        400,
+      );
+    }
+
+    // cek apakah sudah pernah input
+    const existing = await this.prismaService.nilaiAlternatif.findMany({
       where: {
-        code: {
+        alternativeCode: req.alternativeCode,
+        kriteriaCode: {
+          in: criteriaCodes,
+        },
+      },
+      select: {
+        kriteriaCode: true,
+      },
+    });
+
+    if (existing.length > 0) {
+      throw new HttpException(
+        `Nilai alternatif untuk kriteria ${existing
+          .map((x) => x.kriteriaCode)
+          .join(', ')} sudah ada`,
+        400,
+      );
+    }
+
+    // create many
+    await this.prismaService.nilaiAlternatif.createMany({
+      data: req.values.map((item) => ({
+        id: nanoid(),
+        alternativeCode: req.alternativeCode,
+        kriteriaCode: item.kriteriaCode,
+        value: item.value,
+      })),
+    });
+
+    // ambil hasil
+    const rows = await this.prismaService.nilaiAlternatif.findMany({
+      where: {
+        alternativeCode: req.alternativeCode,
+        kriteriaCode: {
+          in: criteriaCodes,
+        },
+      },
+      include: {
+        kriteria: {
+          select: {
+            name: true,
+          },
+        },
+        alternatif: {
+          include: {
+            pengguna: {
+              select: {
+                fullname: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return rows;
+  }
+  async update(
+    request: ReqPutAlternativeValue,
+  ): Promise<AlternativeValueResponse[]> {
+    const req = this.validationService.validate(
+      AlternativeValueValidation.PUT,
+      request,
+    ) as ReqPutAlternativeValue;
+
+    // cek alternatif
+    const alternative = await this.prismaService.alternatif.findUnique({
+      where: {
+        code: req.alternativeCode,
+      },
+    });
+
+    if (!alternative) {
+      throw new HttpException('Alternatif tidak ditemukan', 404);
+    }
+
+    const criteriaCodes = req.values.map((item) => item.kriteriaCode);
+
+    // duplicate payload
+    if (new Set(criteriaCodes).size !== criteriaCodes.length) {
+      throw new HttpException(
+        'Kriteria tidak boleh duplikat dalam request',
+        400,
+      );
+    }
+
+    await this.prismaService.$transaction(async (tx) => {
+      // hapus nilai yang tidak dikirim lagi
+      await tx.nilaiAlternatif.deleteMany({
+        where: {
+          alternativeCode: req.alternativeCode,
+          NOT: {
+            kriteriaCode: {
+              in: criteriaCodes,
+            },
+          },
+        },
+      });
+
+      // update/create
+      for (const item of req.values) {
+        await tx.nilaiAlternatif.upsert({
+          where: {
+            alternativeCode_kriteriaCode: {
+              alternativeCode: req.alternativeCode,
+              kriteriaCode: item.kriteriaCode,
+            },
+          },
+          update: {
+            value: item.value,
+          },
+          create: {
+            alternativeCode: req.alternativeCode,
+            kriteriaCode: item.kriteriaCode,
+            value: item.value,
+          },
+        });
+      }
+    });
+
+    // ambil hasil terbaru
+    const rows = await this.prismaService.nilaiAlternatif.findMany({
+      where: {
+        alternativeCode: req.alternativeCode,
+      },
+      include: {
+        kriteria: {
+          select: {
+            name: true,
+          },
+        },
+        alternatif: {
+          include: {
+            pengguna: {
+              select: {
+                fullname: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    return rows;
+  }
+
+  async delete(request: ReqDeleteAlternativeValue) {
+    const alternatif = await this.prismaService.nilaiAlternatif.findMany({
+      where: {
+        id: {
           in: request.selected,
         },
       },
     });
 
     if (alternatif.length == 0 || alternatif.length < request.selected.length) {
-      throw new HttpException('Alternatif tidak ditemukan', 404);
+      throw new HttpException('Nilai Alternatif tidak ditemukan', 404);
     }
 
-    const deleteAlternatif = await this.prismaService.alternatif.deleteMany({
-      where: {
-        code: {
-          in: request.selected,
+    const deleteAlternatif =
+      await this.prismaService.nilaiAlternatif.deleteMany({
+        where: {
+          id: {
+            in: request.selected,
+          },
         },
-      },
-    });
+      });
+
     if (
       deleteAlternatif.count == 0 ||
       deleteAlternatif.count < request.selected.length
     ) {
-      throw new HttpException('Alternatif tidak ditemukan', 404);
+      throw new HttpException('Nilai Alternatif tidak ditemukan', 404);
     }
 
     return deleteAlternatif;

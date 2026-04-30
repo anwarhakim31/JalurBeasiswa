@@ -26,8 +26,14 @@ export class ReqDeleteAlternativeValue {
 
 export class AlternativeValueResponse {
   alternativeCode: string;
-  alternativeName: string;
+  alternatif: {
+    pengguna: {
+      fullname: string;
+    };
+  };
   kriteriaCode: string;
-  kriteriaName: string;
+  kriteria: {
+    name: string;
+  };
   value: number;
 }

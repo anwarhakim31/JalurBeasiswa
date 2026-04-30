@@ -95,113 +95,69 @@ export class CriteriaService {
     };
   }
 
-  // async getForSelect(
-  //   request: ReqGetAllUser,
-  // ): Promise<{ data: UserResponse[] }> {
-  //   const getReq: ReqGetAllUser = this.validationService.validate(
-  //     CrteriaValidation.GETALL,
-  //     request,
-  //   );
+  async select(
+    beasiswaCode?: string,
+    search?: string,
+  ): Promise<CriteriaResponse[]> {
+    const filter = [];
 
-  //   const filter = [];
+    if (search) {
+      filter.push({
+        OR: [
+          {
+            code: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+          {
+            name: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      });
+    }
 
-  //   if (getReq.search) {
-  //     filter.push({
-  //       OR: [
-  //         {
-  //           nim: {
-  //             contains: getReq.search,
-  //             mode: 'insensitive',
-  //           },
-  //         },
-  //         {
-  //           fullname: {
-  //             contains: getReq.search,
-  //             mode: 'insensitive',
-  //           },
-  //         },
-  //       ],
-  //     });
-  //   }
+    if (beasiswaCode) {
+      filter.push({
+        beasiswaCode: beasiswaCode,
+      });
+    }
 
-  //   const user = await this.prismaService.pengguna.findMany({
-  //     where: {
-  //       AND: filter,
-  //       fullname: {
-  //         not: null,
-  //       },
-  //       prodi: {
-  //         not: null,
-  //       },
-  //       batch: {
-  //         not: null,
-  //       },
-  //       isAdmin: false,
-  //       status: UserStatus.ACCEPT,
-  //     },
-  //     skip: (getReq.page - 1) * getReq.limit,
-  //     take: getReq.limit,
-  //     orderBy: {
-  //       createdAt: 'desc',
-  //     },
-  //     select: {
-  //       nim: true,
-  //       fullname: true,
-  //       email: true,
-  //     },
-  //   });
+    const criteria = await this.prismaService.kriteria.findMany({
+      where: {
+        AND: filter,
+      },
+      include: {
+        beasiswa: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
 
-  //   return {
-  //     data: user,
-  //   };
-  // }
+    return criteria;
+  }
 
-  // async delete(request: ReqDeletePengguna) {
-  //   const users = await this.prismaService.pengguna.findMany({
-  //     where: {
-  //       nim: {
-  //         in: request.selected,
-  //       },
-  //     },
-  //   });
+  async getByBeasiswaCode(beasiswaCode: string): Promise<CriteriaResponse[]> {
+    const alternatif = await this.prismaService.kriteria.findMany({
+      where: {
+        beasiswaCode: beasiswaCode,
+      },
+    });
 
-  //   if (users.length == 0 || users.length < request.selected.length) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'pengguna tidak ditemukan',
-  //         path: ['selected'],
-  //       },
-  //       404,
-  //     );
-  //   }
+    if (alternatif.length === 0) {
+      throw new HttpException(
+        'Kriteria dengan Kode beasiswa tersebut tidak ditemukan',
+        404,
+      );
+    }
 
-  //   const user = await this.prismaService.pengguna.deleteMany({
-  //     where: {
-  //       nim: {
-  //         in: request.selected,
-  //       },
-  //     },
-  //   });
-  //   if (user.count == 0 || user.count < request.selected.length) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'pengguna tidak ditemukan',
-  //         path: ['selected'],
-  //       },
-  //       404,
-  //     );
-  //   }
-
-  //   await this.prismaService.alternatif.deleteMany({
-  //     where: {
-  //       nim: {
-  //         in: request.selected,
-  //       },
-  //     },
-  //   });
-
-  //   return user;
-  // }
+    return alternatif;
+  }
 
   async create(request: ReqPostCriteria): Promise<CriteriaResponse> {
     const criteriaReq: ReqPostCriteria = this.validationService.validate(
