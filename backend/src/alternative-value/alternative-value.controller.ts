@@ -36,15 +36,15 @@ export class AlternativeValueController {
     @Query('search') search?: string,
     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
-    @Query('alternativeCode') alternativeCode?: string,
-    @Query('kriteriaCode') kriteriaCode?: string,
+    @Query('kodeAlternatif') kodeAlternatif?: string,
+    @Query('kodeKriteria') kodeKriteria?: string,
   ): Promise<WebResponse<AlternativeValueResponse[]>> {
     const request: ReqGetAllAlternativeValue = {
       search: search || '',
       page: page,
       limit: limit,
-      alternativeCode: alternativeCode || '',
-      kriteriaCode: kriteriaCode || '',
+      kodeAlternatif: kodeAlternatif || '',
+      kodeKriteria: kodeKriteria || '',
     };
     const res = await this.alternativeValueService.GetAll(request);
 
@@ -71,17 +71,21 @@ export class AlternativeValueController {
     };
   }
 
-  @Get('/:alternativeCode/detail')
+  @Get('/:kodeAlternatif/detail')
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
-  async getDetail(@Param('alternativeCode') alternativeCode: string): Promise<
+  async getDetail(@Param('kodeAlternatif') kodeAlternatif: string): Promise<
     WebResponse<{
-      alternativeCode: string;
-      beasiswaCode: string;
-      values: { kriteriaCode: string; kriteriaName: string; value: number }[];
+      kodeAlternatif: string;
+      kodeBeasiswa: string;
+      nilaiAlternatif: {
+        kodeKriteria: string;
+        namaKriteria: string;
+        nilai: number;
+      }[];
     }>
   > {
-    const res = await this.alternativeValueService.getDetail(alternativeCode);
+    const res = await this.alternativeValueService.getDetail(kodeAlternatif);
 
     return {
       success: true,
@@ -110,7 +114,7 @@ export class AlternativeValueController {
   @UseGuards(AuthGuard, AdminGuard)
   async delete(
     @Body() request: ReqDeleteAlternativeValue,
-  ): Promise<WebResponse<{ name: string }>> {
+  ): Promise<WebResponse<{ nama: string }>> {
     await this.alternativeValueService.delete(request);
     return {
       success: true,

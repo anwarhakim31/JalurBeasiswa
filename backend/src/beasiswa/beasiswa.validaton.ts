@@ -8,7 +8,7 @@ export class BeasiswaValidation {
     status: z.string().optional(),
   });
   static readonly CREATE: ZodType = z.object({
-    code: z
+    kode: z
       .string()
       .nonempty('Kode tidak boleh kosong')
       .max(6, 'Kode maksimal 6 karakter')
@@ -21,22 +21,22 @@ export class BeasiswaValidation {
           message: 'Kode harus mengandung angka dan huruf',
         },
       ),
-    name: z
+    nama: z
       .string()
       .nonempty('Nama tidak boleh kosong')
       .max(125, 'Nama maksimal 125 karakter'),
-    description: z
+    deskripsi: z
       .string()
       .nonempty('Deskripsi tidak boleh kosong')
       .max(1000, 'Deskripsi maksimal 1000 karakter'),
-    period: z
+    periode: z
       .string()
       .nonempty('Periode tidak boleh kosong')
       .max(255, 'Periode maksimal 25 karakter'),
-    isActive: z.boolean(),
+    status: z.boolean(),
   });
   static readonly PUT: ZodType = z.object({
-    code: z
+    kode: z
       .string()
       .nonempty('Kode tidak boleh kosong')
       .max(6, 'Kode maksimal 6 karakter')
@@ -49,21 +49,21 @@ export class BeasiswaValidation {
           message: 'Kode harus mengandung angka dan huruf',
         },
       ),
-    name: z
+    nama: z
       .string()
       .nonempty('Nama tidak boleh kosong')
       .max(125, 'Nama maksimal 125 karakter'),
-    description: z
+    deskripsi: z
       .string()
       .nonempty('Deskripsi tidak boleh kosong')
       .max(1000, 'Deskripsi maksimal 1000 karakter'),
-    period: z
+    periode: z
       .string()
       .nonempty('Periode tidak boleh kosong')
       .max(255, 'Periode maksimal 25 karakter'),
-    isActive: z.boolean(),
+    status: z.boolean(),
   });
   static readonly STATUS: ZodType = z.object({
-    isActive: z.boolean(),
+    status: z.boolean(),
   });
 }

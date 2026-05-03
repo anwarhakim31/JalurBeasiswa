@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
-import { PhotoController } from './photo/photo.controller';
 import { PhotoModule } from './photo/photo.module';
 import { BeasiswaModule } from './beasiswa/beasiswa.module';
 import { AlternativeModule } from './alternative/alternative.module';
 import { CriteriaModule } from './criteria/criteria.module';
 import { AlternativeValueModule } from './alternative-value/alternative-value.module';
+import { ProcessValuesModule } from './process-values/process-values.module';
 
 @Module({
   imports: [
@@ -19,8 +19,9 @@ import { AlternativeValueModule } from './alternative-value/alternative-value.mo
     AlternativeModule,
     CriteriaModule,
     AlternativeValueModule,
+    ProcessValuesModule,
   ],
-  controllers: [PhotoController],
+  controllers: [],
   providers: [],
 })
 export class AppModule {}

@@ -1,8 +1,6 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import {
   ReqDeletePengguna,
-  ReqEditPassword,
-  ReqEditUser,
   ReqGetAllUser,
   ReqPostPengguna,
   ReqPutPengguna,
@@ -13,7 +11,7 @@ import { Paging } from '../models/web.model';
 import { ValidationService } from '../common/validation.service';
 import { PrismaService } from '../common/prisma.service';
 import { UserValidation } from './user.validation';
-import { UserStatus } from '@prisma/client';
+import { StatusPengguna } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -47,7 +45,7 @@ export class UserService {
             },
           },
           {
-            fullname: {
+            namaLengkap: {
               contains: getReq.search,
               mode: 'insensitive',
             },
@@ -61,6 +59,7 @@ export class UserService {
         ],
       });
     }
+
     if (getReq.status) {
       filter.push({
         status: getReq.status,
@@ -70,29 +69,29 @@ export class UserService {
     const user = await this.prismaService.pengguna.findMany({
       where: {
         AND: filter,
-        isAdmin: false,
+        admin: false,
       },
       skip: (getReq.page - 1) * getReq.limit,
       take: getReq.limit,
       orderBy: {
-        createdAt: 'desc',
+        dibuatPada: 'desc',
       },
       select: {
         nim: true,
         email: true,
         status: true,
-        fullname: true,
-        createdAt: true,
+        namaLengkap: true,
+        dibuatPada: true,
         prodi: true,
-        batch: true,
-        photo: true,
+        angkatan: true,
+        foto: true,
       },
     });
 
     const total = await this.prismaService.pengguna.count({
       where: {
         AND: filter,
-        isAdmin: false,
+        admin: false,
       },
     });
 
@@ -127,7 +126,7 @@ export class UserService {
             },
           },
           {
-            fullname: {
+            namaLengkap: {
               contains: getReq.search,
               mode: 'insensitive',
             },
@@ -139,26 +138,26 @@ export class UserService {
     const user = await this.prismaService.pengguna.findMany({
       where: {
         AND: filter,
-        fullname: {
+        namaLengkap: {
           not: null,
         },
         prodi: {
           not: null,
         },
-        batch: {
+        angkatan: {
           not: null,
         },
-        isAdmin: false,
-        status: UserStatus.ACCEPT,
+        admin: false,
+        status: StatusPengguna.Diterima,
       },
       skip: (getReq.page - 1) * getReq.limit,
       take: getReq.limit,
       orderBy: {
-        createdAt: 'desc',
+        dibuatPada: 'desc',
       },
       select: {
         nim: true,
-        fullname: true,
+        namaLengkap: true,
         email: true,
       },
     });
@@ -177,11 +176,11 @@ export class UserService {
         nim: true,
         email: true,
         status: true,
-        fullname: true,
-        createdAt: true,
+        namaLengkap: true,
+        dibuatPada: true,
         prodi: true,
-        batch: true,
-        photo: true,
+        angkatan: true,
+        foto: true,
       },
     });
 
@@ -214,6 +213,24 @@ export class UserService {
           path: ['selected'],
         },
         404,
+      );
+    }
+
+    if (users.length > 0) {
+      await Promise.all(
+        users
+          .filter((u) => u.foto)
+          .map((u) =>
+            fetch(`${process.env.SERVER}/api/photo/destroy`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                image_url: u.foto,
+              }),
+            }),
+          ),
       );
     }
 
@@ -251,10 +268,10 @@ export class UserService {
       request,
     ) as ReqPostPengguna;
 
-    const statusMap: Record<string, UserStatus> = {
-      ACCEPT: UserStatus.ACCEPT,
-      PENDING: UserStatus.PENDING,
-      REJECTED: UserStatus.REJECTED,
+    const statusMap: Record<string, StatusPengguna> = {
+      Diterima: StatusPengguna.Diterima,
+      Menunggu: StatusPengguna.Menunggu,
+      Ditolak: StatusPengguna.Ditolak,
     };
 
     if (!statusMap[penggunaReq.status]) {
@@ -276,7 +293,7 @@ export class UserService {
     if (isExistNim && isExistNim.nim) {
       throw new HttpException(
         {
-          message: 'NIM sudah digunakan',
+          message: 'NIM sudah digunakan oleh pengguna lain',
           path: ['nim'],
         },
         400,
@@ -291,7 +308,7 @@ export class UserService {
     if (isExistEmail && isExistEmail.email) {
       throw new HttpException(
         {
-          message: 'Email sudah digunakan',
+          message: 'Email sudah digunakan oleh pengguna lain',
           path: ['email'],
         },
         400,
@@ -299,34 +316,34 @@ export class UserService {
     }
 
     const salt = await bcrypt.genSalt();
-    penggunaReq.password = await bcrypt.hash(penggunaReq.password, salt);
+    penggunaReq.kataSandi = await bcrypt.hash(penggunaReq.kataSandi, salt);
 
     const user = await this.prismaService.pengguna.create({
       data: {
         nim: penggunaReq.nim,
         email: penggunaReq.email,
-        password: penggunaReq.password,
-        fullname: penggunaReq.fullname,
+        kataSandi: penggunaReq.kataSandi,
+        namaLengkap: penggunaReq.namaLengkap,
         status: statusMap[penggunaReq.status],
         prodi: penggunaReq.prodi,
-        batch: penggunaReq.batch,
-        photo: penggunaReq.photo,
+        angkatan: penggunaReq.angkatan,
+        foto: penggunaReq.foto,
       },
     });
 
     return user;
   }
 
-  async put(request: ReqPutPengguna) {
+  async put(request: ReqPutPengguna, nim: string) {
     const penggunaReq: ReqPutPengguna = this.validationService.validate(
       UserValidation.PUT,
       request,
     ) as ReqPutPengguna;
 
-    const statusMap: Record<string, UserStatus> = {
-      ACCEPT: UserStatus.ACCEPT,
-      PENDING: UserStatus.PENDING,
-      REJECTED: UserStatus.REJECTED,
+    const statusMap: Record<string, StatusPengguna> = {
+      Diterima: StatusPengguna.Diterima,
+      Menunggu: StatusPengguna.Menunggu,
+      Ditolak: StatusPengguna.Ditolak,
     };
 
     if (!statusMap[penggunaReq.status]) {
@@ -339,16 +356,9 @@ export class UserService {
       );
     }
 
-    const isExist = await this.prismaService.pengguna.findFirst({
+    const isExist = await this.prismaService.pengguna.findUnique({
       where: {
-        OR: [
-          {
-            email: penggunaReq.email,
-          },
-          {
-            nim: penggunaReq.nim,
-          },
-        ],
+        nim: nim,
       },
     });
 
@@ -360,7 +370,7 @@ export class UserService {
       where: {
         nim: penggunaReq.nim,
         NOT: {
-          nim: penggunaReq.nim,
+          nim: nim,
         },
       },
     });
@@ -379,7 +389,7 @@ export class UserService {
       where: {
         email: penggunaReq.email,
         NOT: {
-          nim: penggunaReq.nim,
+          nim: nim,
         },
       },
     });
@@ -396,29 +406,29 @@ export class UserService {
 
     const user = await this.prismaService.pengguna.update({
       where: {
-        nim: penggunaReq.nim,
+        nim: nim,
       },
       data: {
         nim: penggunaReq.nim,
         email: penggunaReq.email,
-        fullname: penggunaReq.fullname,
+        namaLengkap: penggunaReq.namaLengkap,
         status: statusMap[penggunaReq.status],
         prodi: penggunaReq.prodi,
-        batch: penggunaReq.batch,
-        photo: penggunaReq.photo,
+        angkatan: penggunaReq.angkatan,
+        foto: penggunaReq.foto,
       },
     });
 
-    if (penggunaReq.password) {
+    if (penggunaReq.kataSandi) {
       const salt = await bcrypt.genSalt();
-      penggunaReq.password = await bcrypt.hash(penggunaReq.password, salt);
+      penggunaReq.kataSandi = await bcrypt.hash(penggunaReq.kataSandi, salt);
 
       await this.prismaService.pengguna.update({
         where: {
-          nim: penggunaReq.nim,
+          nim: user.nim,
         },
         data: {
-          password: penggunaReq.password,
+          kataSandi: penggunaReq.kataSandi,
         },
       });
     }
@@ -427,10 +437,10 @@ export class UserService {
   }
 
   async status(request: { status: string }, nim: string) {
-    const statusMap: Record<string, UserStatus> = {
-      ACCEPT: UserStatus.ACCEPT,
-      PENDING: UserStatus.PENDING,
-      REJECTED: UserStatus.REJECTED,
+    const statusMap: Record<string, StatusPengguna> = {
+      Diterima: StatusPengguna.Diterima,
+      Menunggu: StatusPengguna.Menunggu,
+      Ditolak: StatusPengguna.Ditolak,
     };
 
     if (!statusMap[request.status]) {
@@ -457,88 +467,88 @@ export class UserService {
     });
     return user;
   }
-  async editProfile(request: ReqEditUser, nim: string): Promise<UserResponse> {
-    const RequestEdit: ReqEditUser = this.validationService.validate(
-      UserValidation.EditProfie,
-      request,
-    ) as ReqEditUser;
+  // async editProfile(request: ReqEditUser, nim: string): Promise<UserResponse> {
+  //   const RequestEdit: ReqEditUser = this.validationService.validate(
+  //     UserValidation.EditProfie,
+  //     request,
+  //   ) as ReqEditUser;
 
-    const user = await this.prismaService.pengguna.update({
-      where: {
-        nim: nim,
-      },
-      data: {
-        fullname: RequestEdit.fullname,
-        photo: RequestEdit.photo,
-        email: RequestEdit.email,
-      },
-    });
+  //   const user = await this.prismaService.pengguna.update({
+  //     where: {
+  //       nim: nim,
+  //     },
+  //     data: {
+  //       namaLengkap: RequestEdit.namaLengkap,
+  //       foto: RequestEdit.foto,
+  //       email: RequestEdit.email,
+  //     },
+  //   });
 
-    return {
-      nim: user.nim,
-      fullname: user.fullname,
-      photo: user.photo,
-      email: user.email,
-    };
-  }
-  async changePassword(
-    nim: string,
-    request: ReqEditPassword,
-  ): Promise<UserResponse> {
-    const EditRequest: ReqEditPassword = this.validationService.validate(
-      UserValidation.ChangePassword,
-      request,
-    ) as ReqEditPassword;
+  //   return {
+  //     nim: user.nim,
+  //     namaLengkap: user.namaLengkap,
+  //     foto: user.foto,
+  //     email: user.email,
+  //   };
+  // }
+  // async changePassword(
+  //   nim: string,
+  //   request: ReqEditPassword,
+  // ): Promise<UserResponse> {
+  //   const EditRequest: ReqEditPassword = this.validationService.validate(
+  //     UserValidation.ChangePassword,
+  //     request,
+  //   ) as ReqEditPassword;
 
-    const user = await this.prismaService.pengguna.findUnique({
-      where: {
-        nim: nim,
-      },
-    });
+  //   const user = await this.prismaService.pengguna.findUnique({
+  //     where: {
+  //       nim: nim,
+  //     },
+  //   });
 
-    if (!user) {
-      throw new HttpException(
-        {
-          message: 'pengguna tidak ditemukan',
-          path: ['nim'],
-        },
-        404,
-      );
-    }
+  //   if (!user) {
+  //     throw new HttpException(
+  //       {
+  //         message: 'pengguna tidak ditemukan',
+  //         path: ['nim'],
+  //       },
+  //       404,
+  //     );
+  //   }
 
-    const isPasswordValid = await bcrypt.compare(
-      EditRequest.password,
-      user.password,
-    );
+  //   const isPasswordValid = await bcrypt.compare(
+  //     EditRequest.password,
+  //     user.password,
+  //   );
 
-    if (!isPasswordValid) {
-      throw new HttpException(
-        {
-          message: 'Kata sandi tidak valid',
-          path: ['password'],
-        },
-        400,
-      );
-    }
+  //   if (!isPasswordValid) {
+  //     throw new HttpException(
+  //       {
+  //         message: 'Kata sandi tidak valid',
+  //         path: ['password'],
+  //       },
+  //       400,
+  //     );
+  //   }
 
-    const gensalt = await bcrypt.genSalt(10);
+  //   const gensalt = await bcrypt.genSalt(10);
 
-    const hashedPassword = await bcrypt.hash(EditRequest.newPassword, gensalt);
+  //   const hashedPassword = await bcrypt.hash(EditRequest.newPassword, gensalt);
 
-    const updated = await this.prismaService.pengguna.update({
-      where: {
-        nim: nim,
-      },
-      data: {
-        password: hashedPassword,
-      },
-    });
+  //   const updated = await this.prismaService.pengguna.update({
+  //     where: {
+  //       nim: nim,
+  //     },
+  //     data: {
+  //       password: hashedPassword,
+  //     },
+  //   });
 
-    return {
-      nim: updated.nim,
-      fullname: updated.fullname,
-      photo: updated?.photo || null,
-      email: updated.email,
-    };
-  }
+  //   return {
+  //     nim: updated.nim,
+  //     namaLengkap: updated.namaLengkap,
+  //     foto: updated?.foto || null,
+  //     email: updated.email,
+  //   };
+  // }
 }

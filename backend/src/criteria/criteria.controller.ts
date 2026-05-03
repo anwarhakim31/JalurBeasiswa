@@ -35,15 +35,15 @@ export class CriteriaController {
     @Query('search') search?: string,
     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
-    @Query('type') type?: string,
-    @Query('beasiswaCode') beasiswaCode?: string,
+    @Query('tipe') tipe?: string,
+    @Query('kodeBeasiswa') kodeBeasiswa?: string,
   ): Promise<WebResponse<CriteriaResponse[]>> {
     const request: ReqGetAllCriteria = {
       search: search || '',
       page: page,
       limit: limit,
-      type: type || '',
-      beasiswaCode: beasiswaCode || '',
+      tipe: tipe || '',
+      kodeBeasiswa: kodeBeasiswa || '',
     };
 
     const res = await this.criteriaService.getAll(request);
@@ -60,31 +60,31 @@ export class CriteriaController {
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
   async select(
-    @Query('beasiswaCode') beasiswaCode?: string,
+    @Query('kodeBeasiswa') kodeBeasiswa?: string,
     @Query('search') search?: string,
   ): Promise<WebResponse<{ id: string; label: string; value: string }[]>> {
-    const res = await this.criteriaService.select(beasiswaCode, search);
+    const res = await this.criteriaService.select(kodeBeasiswa, search);
 
     return {
       success: true,
       message: 'Berhasil mengambil data kriteria',
       data: res.map((item) => {
         return {
-          id: item.code,
-          label: item.name,
-          value: item.code,
+          id: item.kode,
+          label: item.nama,
+          value: item.kode,
         };
       }),
     };
   }
 
-  @Get('/:beasiswaCode/get')
+  @Get('/:kodeBeasiswa/get')
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
   async getByBeasiswaCode(
-    @Param('beasiswaCode') beasiswaCode: string,
+    @Param('kodeBeasiswa') kodeBeasiswa: string,
   ): Promise<WebResponse<CriteriaResponse[]>> {
-    const res = await this.criteriaService.getByBeasiswaCode(beasiswaCode);
+    const res = await this.criteriaService.getByBeasiswaCode(kodeBeasiswa);
 
     return {
       success: true,
@@ -108,14 +108,14 @@ export class CriteriaController {
     };
   }
 
-  @Put('/:code/update')
+  @Put('/:kode/update')
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
   async update(
     @Body() request: ReqPutCriteria,
-    @Param('code') code: string,
+    @Param('kode') kode: string,
   ): Promise<WebResponse<CriteriaResponse>> {
-    const res = await this.criteriaService.put(request, code);
+    const res = await this.criteriaService.put(request, kode);
     return {
       success: true,
       message: 'Berhasil mengubah data kriteria',
@@ -136,14 +136,14 @@ export class CriteriaController {
     };
   }
 
-  @Patch('/:code/type')
+  @Patch('/:kode/type')
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
   async changeType(
-    @Param('code') code: string,
-    @Body() request: { type: string },
-  ): Promise<WebResponse<{ name: string }>> {
-    const res = await this.criteriaService.changeType(request, code);
+    @Param('kode') kode: string,
+    @Body() request: { tipe: string },
+  ): Promise<WebResponse<{ nama: string }>> {
+    const res = await this.criteriaService.changeType(request, kode);
 
     return {
       success: true,

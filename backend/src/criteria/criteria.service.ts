@@ -4,7 +4,7 @@ import { Paging } from '../models/web.model';
 import { ValidationService } from '../common/validation.service';
 import { PrismaService } from '../common/prisma.service';
 import { CrteriaValidation } from './criteria.validation';
-import { creteriaType } from '@prisma/client';
+import { TipeKriteria } from '@prisma/client';
 import {
   CriteriaResponse,
   ReqDeleteCriteria,
@@ -33,13 +33,13 @@ export class CriteriaService {
       filter.push({
         OR: [
           {
-            code: {
+            kode: {
               contains: getReq.search,
               mode: 'insensitive',
             },
           },
           {
-            name: {
+            nama: {
               contains: getReq.search,
               mode: 'insensitive',
             },
@@ -48,15 +48,15 @@ export class CriteriaService {
       });
     }
 
-    if (getReq.type) {
+    if (getReq.tipe) {
       filter.push({
-        type: getReq.type,
+        tipe: getReq.tipe,
       });
     }
 
-    if (getReq.beasiswaCode) {
+    if (getReq.kodeBeasiswa) {
       filter.push({
-        beasiswaCode: getReq.beasiswaCode,
+        kodeBeasiswa: getReq.kodeBeasiswa,
       });
     }
 
@@ -67,14 +67,14 @@ export class CriteriaService {
       include: {
         beasiswa: {
           select: {
-            name: true,
+            nama: true,
           },
         },
       },
       skip: (getReq.page - 1) * getReq.limit,
       take: getReq.limit,
       orderBy: {
-        createdAt: 'desc',
+        kode: 'desc',
       },
     });
 
@@ -96,7 +96,7 @@ export class CriteriaService {
   }
 
   async select(
-    beasiswaCode?: string,
+    kodeBeasiswa?: string,
     search?: string,
   ): Promise<CriteriaResponse[]> {
     const filter = [];
@@ -105,13 +105,13 @@ export class CriteriaService {
       filter.push({
         OR: [
           {
-            code: {
+            kode: {
               contains: search,
               mode: 'insensitive',
             },
           },
           {
-            name: {
+            nama: {
               contains: search,
               mode: 'insensitive',
             },
@@ -120,9 +120,9 @@ export class CriteriaService {
       });
     }
 
-    if (beasiswaCode) {
+    if (kodeBeasiswa) {
       filter.push({
-        beasiswaCode: beasiswaCode,
+        kodeBeasiswa: kodeBeasiswa,
       });
     }
 
@@ -133,7 +133,7 @@ export class CriteriaService {
       include: {
         beasiswa: {
           select: {
-            name: true,
+            nama: true,
           },
         },
       },
@@ -142,10 +142,10 @@ export class CriteriaService {
     return criteria;
   }
 
-  async getByBeasiswaCode(beasiswaCode: string): Promise<CriteriaResponse[]> {
+  async getByBeasiswaCode(kodeBeasiswa: string): Promise<CriteriaResponse[]> {
     const alternatif = await this.prismaService.kriteria.findMany({
       where: {
-        beasiswaCode: beasiswaCode,
+        kodeBeasiswa: kodeBeasiswa,
       },
     });
 
@@ -165,16 +165,16 @@ export class CriteriaService {
       request,
     ) as ReqPostCriteria;
 
-    const criteriaMap: Record<string, creteriaType> = {
-      BENEFIT: creteriaType.BENEFIT,
-      COST: creteriaType.COST,
+    const criteriaMap: Record<string, TipeKriteria> = {
+      Keuntungan: TipeKriteria.Keuntungan,
+      Biaya: TipeKriteria.Biaya,
     };
 
-    if (!criteriaMap[criteriaReq.type]) {
+    if (!criteriaMap[criteriaReq.tipe]) {
       throw new HttpException(
         {
           message: 'Tipe kriteria tidak ditemukan',
-          path: ['type'],
+          path: ['tipe'],
         },
         400,
       );
@@ -182,15 +182,15 @@ export class CriteriaService {
 
     const isExistCode = await this.prismaService.kriteria.findUnique({
       where: {
-        code: criteriaReq.code,
+        kode: criteriaReq.kode,
       },
     });
 
-    if (isExistCode && isExistCode.code) {
+    if (isExistCode && isExistCode.kode) {
       throw new HttpException(
         {
           message: 'Kode kriteria sudah digunakan',
-          path: ['code'],
+          path: ['kode'],
         },
         400,
       );
@@ -198,50 +198,72 @@ export class CriteriaService {
 
     const isExistNameCode = await this.prismaService.kriteria.findFirst({
       where: {
-        name: criteriaReq.name,
-        beasiswaCode: criteriaReq.beasiswaCode,
+        nama: criteriaReq.nama,
+        kodeBeasiswa: criteriaReq.kodeBeasiswa,
       },
       include: {
         beasiswa: true,
       },
     });
 
-    if (isExistNameCode && isExistNameCode.name) {
+    if (isExistNameCode && isExistNameCode.nama) {
       throw new HttpException(
-        `Kriteria dengan nama tersebut sudah ada pada beasiswa ${isExistNameCode.beasiswa.name}`,
+        `Kriteria dengan nama tersebut sudah ada pada beasiswa ${isExistNameCode.beasiswa.nama}`,
+        400,
+      );
+    }
+
+    const result = await this.prismaService.kriteria.aggregate({
+      where: {
+        kodeBeasiswa: criteriaReq.kodeBeasiswa,
+      },
+      _sum: {
+        bobot: true,
+      },
+    });
+
+    const totalBobot =
+      Number(result._sum.bobot ?? 0) + Number(criteriaReq.bobot);
+
+    if (totalBobot > 1) {
+      throw new HttpException(
+        {
+          message: 'Total bobot kriteria sudah melebihi 1',
+          path: ['bobot'],
+        },
         400,
       );
     }
 
     const res = await this.prismaService.kriteria.create({
       data: {
-        code: criteriaReq.code,
-        name: criteriaReq.name,
-        type: criteriaMap[criteriaReq.type],
-        weight: criteriaReq.weight,
-        beasiswaCode: criteriaReq.beasiswaCode,
+        kode: criteriaReq.kode,
+        nama: criteriaReq.nama,
+        tipe: criteriaMap[criteriaReq.tipe],
+        bobot: Number(criteriaReq.bobot.toFixed(2)),
+        kodeBeasiswa: criteriaReq.kodeBeasiswa,
       },
     });
 
     return res;
   }
 
-  async put(request: ReqPutCriteria, code: string): Promise<CriteriaResponse> {
+  async put(request: ReqPutCriteria, kode: string): Promise<CriteriaResponse> {
     const criteriaReq: ReqPutCriteria = this.validationService.validate(
       CrteriaValidation.PUT,
       request,
     ) as ReqPutCriteria;
 
-    const criteriaMap: Record<string, creteriaType> = {
-      BENEFIT: creteriaType.BENEFIT,
-      COST: creteriaType.COST,
+    const criteriaMap: Record<string, TipeKriteria> = {
+      Keuntungan: TipeKriteria.Keuntungan,
+      Biaya: TipeKriteria.Biaya,
     };
 
-    if (!criteriaMap[criteriaReq.type]) {
+    if (!criteriaMap[criteriaReq.tipe]) {
       throw new HttpException(
         {
           message: 'Tipe kriteria tidak ditemukan',
-          path: ['type'],
+          path: ['tipe'],
         },
         400,
       );
@@ -249,7 +271,7 @@ export class CriteriaService {
 
     const notFound = await this.prismaService.kriteria.findUnique({
       where: {
-        code: code,
+        kode: kode,
       },
     });
 
@@ -257,7 +279,7 @@ export class CriteriaService {
       throw new HttpException(
         {
           message: 'Kriteria tidak ditemukan',
-          path: ['code'],
+          path: ['kode'],
         },
         404,
       );
@@ -265,18 +287,18 @@ export class CriteriaService {
 
     const isExistCode = await this.prismaService.kriteria.findUnique({
       where: {
-        code: criteriaReq.code,
+        kode: criteriaReq.kode,
         NOT: {
-          code: code,
+          kode: kode,
         },
       },
     });
 
-    if (isExistCode && isExistCode.code) {
+    if (isExistCode && isExistCode.kode) {
       throw new HttpException(
         {
           message: 'Kode kriteria sudah digunakan',
-          path: ['code'],
+          path: ['kode'],
         },
         400,
       );
@@ -284,10 +306,10 @@ export class CriteriaService {
 
     const isExistNameCode = await this.prismaService.kriteria.findFirst({
       where: {
-        name: criteriaReq.name,
-        beasiswaCode: criteriaReq.beasiswaCode,
+        nama: criteriaReq.nama,
+        kodeBeasiswa: criteriaReq.kodeBeasiswa,
         NOT: {
-          code: code,
+          kode: kode,
         },
       },
       include: {
@@ -295,23 +317,48 @@ export class CriteriaService {
       },
     });
 
-    if (isExistNameCode && isExistNameCode.name) {
+    if (isExistNameCode && isExistNameCode.nama) {
       throw new HttpException(
-        `Kriteria dengan nama tersebut sudah ada pada beasiswa ${isExistNameCode.beasiswa.name}`,
+        `Kriteria dengan nama tersebut sudah ada pada beasiswa ${isExistNameCode.beasiswa.nama}`,
+        400,
+      );
+    }
+
+    const result = await this.prismaService.kriteria.aggregate({
+      where: {
+        kodeBeasiswa: criteriaReq.kodeBeasiswa,
+        NOT: {
+          kode: kode,
+        },
+      },
+      _sum: {
+        bobot: true,
+      },
+    });
+
+    const totalBobot =
+      Number(result._sum.bobot ?? 0) + Number(criteriaReq.bobot);
+
+    if (totalBobot > 1) {
+      throw new HttpException(
+        {
+          message: 'Total bobot kriteria sudah melebihi 1',
+          path: ['bobot'],
+        },
         400,
       );
     }
 
     const res = await this.prismaService.kriteria.update({
       where: {
-        code: code,
+        kode: kode,
       },
       data: {
-        code: criteriaReq.code,
-        name: criteriaReq.name,
-        type: criteriaMap[criteriaReq.type],
-        weight: criteriaReq.weight,
-        beasiswaCode: criteriaReq.beasiswaCode,
+        kode: criteriaReq.kode,
+        nama: criteriaReq.nama,
+        tipe: criteriaMap[criteriaReq.tipe],
+        bobot: Number(criteriaReq.bobot.toFixed(3)),
+        kodeBeasiswa: criteriaReq.kodeBeasiswa,
       },
     });
 
@@ -321,7 +368,7 @@ export class CriteriaService {
   async delete(request: ReqDeleteCriteria) {
     const kriteria = await this.prismaService.kriteria.findMany({
       where: {
-        code: {
+        kode: {
           in: request.selected,
         },
       },
@@ -333,7 +380,7 @@ export class CriteriaService {
 
     const deletKriteria = await this.prismaService.kriteria.deleteMany({
       where: {
-        code: {
+        kode: {
           in: request.selected,
         },
       },
@@ -348,35 +395,36 @@ export class CriteriaService {
     return deletKriteria;
   }
 
-  async changeType(request: { type: string }, code: string) {
+  async changeType(request: { tipe: string }, kode: string) {
     const criteriaReq = this.validationService.validate(
       CrteriaValidation.TYPE,
       request,
-    ) as { type: string };
+    ) as { tipe: string };
 
-    const criteriaMap: Record<string, creteriaType> = {
-      BENEFIT: creteriaType.BENEFIT,
-      COST: creteriaType.COST,
+    const criteriaMap: Record<string, TipeKriteria> = {
+      Keuntungan: TipeKriteria.Keuntungan,
+      Biaya: TipeKriteria.Biaya,
     };
 
     const notFound = await this.prismaService.kriteria.findUnique({
       where: {
-        code: code,
+        kode: kode,
       },
     });
+
     if (!notFound) {
       throw new HttpException(
-        'Kriteria dengan code tersebut tidak ditemukan',
+        'Kriteria dengan kode tersebut tidak ditemukan',
         404,
       );
     }
 
     const result = await this.prismaService.kriteria.update({
       where: {
-        code: code,
+        kode: kode,
       },
       data: {
-        type: criteriaMap[criteriaReq.type],
+        tipe: criteriaMap[criteriaReq.tipe],
       },
     });
     return result;

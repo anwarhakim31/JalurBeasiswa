@@ -34,13 +34,13 @@ export class AlternativeController {
     @Query('search') search?: string,
     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
-    @Query('beasiswaCode') beasiswaCode?: string,
+    @Query('kodeBeasiswa') kodeBeasiswa?: string,
   ): Promise<WebResponse<AlternativeResponse[]>> {
     const request: ReqGetAllAlternative = {
       search: search || '',
       page: page,
       limit: limit,
-      beasiswaCode: beasiswaCode || '',
+      kodeBeasiswa: kodeBeasiswa || '',
     };
     const res = await this.alternativeService.GetAll(request);
 
@@ -58,10 +58,10 @@ export class AlternativeController {
   async getForSelect(@Query('search') search?: string): Promise<
     WebResponse<
       {
-        alternativeCode: string;
-        alternativeName: string;
-        beasiswaCode: string;
-        beasiswaName: string;
+        kodeAlternatif: string;
+        namaAlternatif: string;
+        kodeBeasiswa: string;
+        namaBeasiswa: string;
       }[]
     >
   > {
@@ -77,10 +77,10 @@ export class AlternativeController {
       success: true,
       message: 'Berhasil mengambil data alternatif',
       data: res.map((item) => ({
-        alternativeCode: item.code,
-        alternativeName: item.fullname,
-        beasiswaCode: item.beasiswaCode,
-        beasiswaName: item.name,
+        kodeAlternatif: item.kode,
+        namaAlternatif: item.namaLengkap,
+        kodeBeasiswa: item.kodeBeasiswa,
+        namaBeasiswa: item.nama,
       })),
     };
   }
@@ -100,14 +100,14 @@ export class AlternativeController {
     };
   }
 
-  @Put('/:code/update')
+  @Put('/:kode/update')
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
   async update(
     @Body() request: ReqPutAlternative,
-    @Param('code') code: string,
+    @Param('kode') kode: string,
   ): Promise<WebResponse<AlternativeResponse>> {
-    const res = await this.alternativeService.update(request, code);
+    const res = await this.alternativeService.update(request, kode);
     return {
       success: true,
       message: 'Berhasil mengubah data beasiswa',
@@ -120,7 +120,7 @@ export class AlternativeController {
   @UseGuards(AuthGuard, AdminGuard)
   async delete(
     @Body() request: ReqDeleteAlternative,
-  ): Promise<WebResponse<{ name: string }>> {
+  ): Promise<WebResponse<{ nama: string }>> {
     await this.alternativeService.delete(request);
     return {
       success: true,

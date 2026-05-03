@@ -13,7 +13,7 @@ export class UserValidation {
       .string()
       .min(5, 'NIM minimal 5 karakter')
       .max(32, 'NIM maksimal 32 karakter'),
-    fullname: z
+    namaLengkap: z
       .string()
       .max(100, 'Nama Lengkap maksimal 100 karakter')
       .optional()
@@ -27,7 +27,7 @@ export class UserValidation {
         },
       ),
 
-    photo: z.string().optional(),
+    foto: z.string().optional(),
     status: z
       .string()
       .nonempty('Status tidak boleh kosong')
@@ -48,7 +48,7 @@ export class UserValidation {
           message: 'Program Studi minimal 5 karakter',
         },
       ),
-    batch: z
+    angkatan: z
       .number()
       .max(9999, 'Tahun angkatan maksimal 9999')
       .nullable()
@@ -62,7 +62,7 @@ export class UserValidation {
           message: 'Tahun angkatan minimal 1900',
         },
       ),
-    password: z
+    kataSandi: z
       .string()
       .nonempty('Kata sandi tidak boleh kosong')
       .min(5, 'Kata sandi minimal 5 karakter')
@@ -73,7 +73,7 @@ export class UserValidation {
           return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/.test(val);
         },
         {
-          message: 'Password harus mengandung huruf dan angka',
+          message: 'Kata Sandi harus mengandung huruf dan angka',
         },
       ),
   });
@@ -84,7 +84,7 @@ export class UserValidation {
       .nonempty('NIM tidak boleh kosong')
       .min(5, 'NIM minimal 5 karakter')
       .max(32, 'NIM maksimal 32 karakter'),
-    fullname: z
+    namaLengkap: z
       .string()
       .max(100, 'Nama Lengkap maksimal 100 karakter')
       .optional()
@@ -110,7 +110,7 @@ export class UserValidation {
           message: 'Program Studi minimal 5 karakter',
         },
       ),
-    batch: z
+    angkatan: z
       .number()
 
       .max(9999, 'Tahun angkatan maksimal 9999')
@@ -125,7 +125,7 @@ export class UserValidation {
           message: 'Tahun angkatan minimal 1900',
         },
       ),
-    photo: z.string().optional(),
+    foto: z.string().optional(),
     status: z
       .string()
       .nonempty('Status tidak boleh kosong')
@@ -133,7 +133,7 @@ export class UserValidation {
       .max(100, 'Status maksimal 100 karakter')
       .optional(),
     email: z.string().email('Email tidak valid').optional(),
-    password: z
+    kataSandi: z
       .string()
       .max(100, 'Kata sandi maksimal 100 karakter')
       .optional()
@@ -143,7 +143,7 @@ export class UserValidation {
           return val.length >= 5;
         },
         {
-          message: 'Password minimal 5 karakter',
+          message: 'kataSandi minimal 5 karakter',
         },
       )
       .refine(
@@ -152,7 +152,7 @@ export class UserValidation {
           return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/.test(val);
         },
         {
-          message: 'Password harus mengandung huruf dan angka',
+          message: 'kataSandi harus mengandung huruf dan angka',
         },
       ),
   });
@@ -164,13 +164,13 @@ export class UserValidation {
   });
 
   static readonly EditProfie: ZodType = z.object({
-    fullname: z.string().min(1),
+    namaLengkap: z.string().min(1),
     email: z.string().min(1),
-    photo: z.string().optional(),
+    foto: z.string().optional(),
   });
 
-  static readonly ChangePassword: ZodType = z.object({
-    password: z.string().min(1),
-    newPassword: z.string().min(1),
+  static readonly ChangekataSandi: ZodType = z.object({
+    kataSandi: z.string().min(1),
+    kataSandiBaru: z.string().min(1),
   });
 }

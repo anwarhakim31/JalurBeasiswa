@@ -7,7 +7,7 @@ export class AuthValidation {
       .min(1, 'NIM harus diisi')
       .max(32, 'NIM maksimal 32 karakter'),
     email: z.string().min(1, 'Email harus diisi').email('Email tidak valid'),
-    password: z
+    kataSandi: z
       .string()
       .min(1, 'Kata sandi harus diisi')
       .max(100, 'Kata sandi maksimal 100 karakter'),
@@ -18,7 +18,7 @@ export class AuthValidation {
       .string()
       .min(1, 'NIM/Email harus diisi')
       .max(100, 'NIM/Email maksimal 100 karakter'),
-    password: z
+    kataSandi: z
       .string()
       .min(1, 'Kata sandi harus diisi')
       .max(100, 'Kata sandi maksimal 100 karakter'),
@@ -34,7 +34,7 @@ export class AuthValidation {
       .string()
       .min(1, 'NIM harus diisi')
       .max(32, 'NIM maksimal 32 karakter'),
-    newPassword: z
+    kataSandiBaru: z
       .string()
       .min(1, 'Kata sandi harus diisi')
       .max(100, 'Kata sandi maksimal 100 karakter'),

@@ -31,15 +31,15 @@ export class AlternativeValueService {
 
     const filter = [];
 
-    if (getReq.kriteriaCode) {
+    if (getReq.kodeKriteria) {
       filter.push({
-        kriteriaCode: getReq.kriteriaCode,
+        kodeKriteria: getReq.kodeKriteria,
       });
     }
 
-    if (getReq.alternativeCode) {
+    if (getReq.kodeAlternatif) {
       filter.push({
-        alternativeCode: getReq.alternativeCode,
+        kodeAlternatif: getReq.kodeAlternatif,
       });
     }
 
@@ -50,14 +50,14 @@ export class AlternativeValueService {
       include: {
         kriteria: {
           select: {
-            name: true,
+            nama: true,
           },
         },
         alternatif: {
           include: {
             pengguna: {
               select: {
-                fullname: true,
+                namaLengkap: true,
               },
             },
           },
@@ -67,10 +67,10 @@ export class AlternativeValueService {
       take: getReq.limit,
       orderBy: [
         {
-          kriteriaCode: 'desc',
+          kodeAlternatif: 'desc',
         },
         {
-          createdAt: 'desc',
+          kodeKriteria: 'desc',
         },
       ],
     });
@@ -91,22 +91,22 @@ export class AlternativeValueService {
       },
     };
   }
-  async getDetail(alternativeCode: string): Promise<{
-    alternativeCode: string;
-    beasiswaCode: string;
-    values: {
-      kriteriaCode: string;
-      kriteriaName: string;
-      value: number;
+  async getDetail(kodeAlternatif: string): Promise<{
+    kodeAlternatif: string;
+    kodeBeasiswa: string;
+    nilaiAlternatif: {
+      kodeKriteria: string;
+      namaKriteria: string;
+      nilai: number;
     }[];
   }> {
     const alternative = await this.prismaService.alternatif.findUnique({
       where: {
-        code: alternativeCode,
+        kode: kodeAlternatif,
       },
       select: {
-        code: true,
-        beasiswaCode: true,
+        kode: true,
+        kodeBeasiswa: true,
       },
     });
 
@@ -120,13 +120,13 @@ export class AlternativeValueService {
     const [res, criteria] = await Promise.all([
       this.prismaService.nilaiAlternatif.findMany({
         where: {
-          alternativeCode,
+          kodeAlternatif,
         },
         include: {
           kriteria: {
             select: {
-              code: true,
-              name: true,
+              kode: true,
+              nama: true,
             },
           },
         },
@@ -134,32 +134,32 @@ export class AlternativeValueService {
 
       this.prismaService.kriteria.findMany({
         where: {
-          beasiswaCode: alternative.beasiswaCode,
+          kodeBeasiswa: alternative.kodeBeasiswa,
         },
         select: {
-          code: true,
-          name: true,
+          kode: true,
+          nama: true,
         },
         orderBy: {
-          createdAt: 'asc',
+          dibuatPada: 'asc',
         },
       }),
     ]);
 
-    const values = criteria.map((item) => {
-      const existing = res.find((nilai) => nilai.kriteriaCode === item.code);
+    const nilaiAlternatif = criteria.map((item) => {
+      const existing = res.find((nilai) => nilai.kodeKriteria === item.kode);
 
       return {
-        kriteriaCode: item.code,
-        kriteriaName: item.name,
-        value: existing?.value ?? 0,
+        kodeKriteria: item.kode,
+        namaKriteria: item.nama,
+        nilai: existing?.nilai ?? 0,
       };
     });
 
     return {
-      alternativeCode,
-      beasiswaCode: alternative.beasiswaCode,
-      values,
+      kodeAlternatif,
+      kodeBeasiswa: alternative.kodeBeasiswa,
+      nilaiAlternatif,
     };
   }
   async create(
@@ -173,12 +173,12 @@ export class AlternativeValueService {
     // cek alternatif ada
     const alternative = await this.prismaService.alternatif.findUnique({
       where: {
-        code: req.alternativeCode,
+        kode: req.kodeAlternatif,
       },
       include: {
         pengguna: {
           select: {
-            fullname: true,
+            namaLengkap: true,
           },
         },
       },
@@ -188,7 +188,7 @@ export class AlternativeValueService {
       throw new HttpException('Alternatif tidak ditemukan', 404);
     }
 
-    const criteriaCodes = req.values.map((item) => item.kriteriaCode);
+    const criteriaCodes = req.nilaiAlternatif.map((item) => item.kodeKriteria);
 
     // cek duplicate dalam payload
     const uniqueCodes = new Set(criteriaCodes);
@@ -202,20 +202,20 @@ export class AlternativeValueService {
     // cek apakah sudah pernah input
     const existing = await this.prismaService.nilaiAlternatif.findMany({
       where: {
-        alternativeCode: req.alternativeCode,
-        kriteriaCode: {
+        kodeAlternatif: req.kodeAlternatif,
+        kodeKriteria: {
           in: criteriaCodes,
         },
       },
       select: {
-        kriteriaCode: true,
+        kodeKriteria: true,
       },
     });
 
     if (existing.length > 0) {
       throw new HttpException(
         `Nilai alternatif untuk kriteria ${existing
-          .map((x) => x.kriteriaCode)
+          .map((x) => x.kodeKriteria)
           .join(', ')} sudah ada`,
         400,
       );
@@ -223,33 +223,33 @@ export class AlternativeValueService {
 
     // create many
     await this.prismaService.nilaiAlternatif.createMany({
-      data: req.values.map((item) => ({
+      data: req.nilaiAlternatif.map((item) => ({
         id: nanoid(),
-        alternativeCode: req.alternativeCode,
-        kriteriaCode: item.kriteriaCode,
-        value: item.value,
+        kodeAlternatif: req.kodeAlternatif,
+        kodeKriteria: item.kodeKriteria,
+        nilai: item.nilai,
       })),
     });
 
     // ambil hasil
     const rows = await this.prismaService.nilaiAlternatif.findMany({
       where: {
-        alternativeCode: req.alternativeCode,
-        kriteriaCode: {
+        kodeAlternatif: req.kodeAlternatif,
+        kodeKriteria: {
           in: criteriaCodes,
         },
       },
       include: {
         kriteria: {
           select: {
-            name: true,
+            nama: true,
           },
         },
         alternatif: {
           include: {
             pengguna: {
               select: {
-                fullname: true,
+                namaLengkap: true,
               },
             },
           },
@@ -270,7 +270,7 @@ export class AlternativeValueService {
     // cek alternatif
     const alternative = await this.prismaService.alternatif.findUnique({
       where: {
-        code: req.alternativeCode,
+        kode: req.kodeAlternatif,
       },
     });
 
@@ -278,7 +278,7 @@ export class AlternativeValueService {
       throw new HttpException('Alternatif tidak ditemukan', 404);
     }
 
-    const criteriaCodes = req.values.map((item) => item.kriteriaCode);
+    const criteriaCodes = req.nilaiAlternatif.map((item) => item.kodeKriteria);
 
     // duplicate payload
     if (new Set(criteriaCodes).size !== criteriaCodes.length) {
@@ -292,9 +292,9 @@ export class AlternativeValueService {
       // hapus nilai yang tidak dikirim lagi
       await tx.nilaiAlternatif.deleteMany({
         where: {
-          alternativeCode: req.alternativeCode,
+          kodeAlternatif: req.kodeAlternatif,
           NOT: {
-            kriteriaCode: {
+            kodeKriteria: {
               in: criteriaCodes,
             },
           },
@@ -302,21 +302,21 @@ export class AlternativeValueService {
       });
 
       // update/create
-      for (const item of req.values) {
+      for (const item of req.nilaiAlternatif) {
         await tx.nilaiAlternatif.upsert({
           where: {
-            alternativeCode_kriteriaCode: {
-              alternativeCode: req.alternativeCode,
-              kriteriaCode: item.kriteriaCode,
+            kodeAlternatif_kodeKriteria: {
+              kodeAlternatif: req.kodeAlternatif,
+              kodeKriteria: item.kodeKriteria,
             },
           },
           update: {
-            value: item.value,
+            nilai: item.nilai,
           },
           create: {
-            alternativeCode: req.alternativeCode,
-            kriteriaCode: item.kriteriaCode,
-            value: item.value,
+            kodeAlternatif: req.kodeAlternatif,
+            kodeKriteria: item.kodeKriteria,
+            nilai: item.nilai,
           },
         });
       }
@@ -325,26 +325,26 @@ export class AlternativeValueService {
     // ambil hasil terbaru
     const rows = await this.prismaService.nilaiAlternatif.findMany({
       where: {
-        alternativeCode: req.alternativeCode,
+        kodeAlternatif: req.kodeAlternatif,
       },
       include: {
         kriteria: {
           select: {
-            name: true,
+            nama: true,
           },
         },
         alternatif: {
           include: {
             pengguna: {
               select: {
-                fullname: true,
+                namaLengkap: true,
               },
             },
           },
         },
       },
       orderBy: {
-        createdAt: 'asc',
+        dibuatPada: 'asc',
       },
     });
 

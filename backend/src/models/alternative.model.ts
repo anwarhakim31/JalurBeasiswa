@@ -1,25 +1,20 @@
-export class ReqEditAlternative {
-  nim: string;
-  beasiswaId: string;
-}
-
 export class ReqGetAllAlternative {
   page?: number;
   search?: string;
   limit?: number;
-  beasiswaCode?: string;
+  kodeBeasiswa?: string;
 }
 
 export class ReqPutAlternative {
-  code: string;
+  kode: string;
   nim: string;
-  beasiswaCode: string;
+  kodeBeasiswa: string;
 }
 
 export class ReqPostAlternative {
-  code: string;
+  kode: string;
   nim: string;
-  beasiswaCode: string;
+  kodeBeasiswa: string;
 }
 
 export class ReqDeleteAlternative {
@@ -27,11 +22,11 @@ export class ReqDeleteAlternative {
 }
 
 export class AlternativeResponse {
-  code: string;
+  kode: string;
   nim: string;
-  fullname?: string;
+  namaLengkap?: string;
   id: string;
-  name?: string;
-  beasiswaCode: string;
-  createdAt?: Date;
+  nama?: string;
+  kodeBeasiswa: string;
+  dibuatPada?: Date;
 }

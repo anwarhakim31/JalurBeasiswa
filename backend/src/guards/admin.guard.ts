@@ -11,7 +11,7 @@ export class AdminGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    if (!user || !user.isAdmin) {
+    if (!user || !user.admin) {
       throw new ForbiddenException(
         'Forbidden: Anda tidak memiliki akses sebagai admin',
       );

@@ -6,10 +6,10 @@ export class AlternativeValidation {
     page: z.number().min(1).optional(),
     limit: z.number().min(10).optional(),
     status: z.string().optional(),
-    beasiswaCode: z.string().optional(),
+    kodeBeasiswa: z.string().optional(),
   });
   static readonly CREATE: ZodType = z.object({
-    code: z
+    kode: z
       .string()
       .nonempty('Kode tidak boleh kosong')
       .max(6, 'Kode maksimal 6 karakter')
@@ -27,13 +27,13 @@ export class AlternativeValidation {
       .nonempty('NIM tidak boleh kosong')
       .min(5, 'NIM minimal 5 karakter')
       .max(32, 'NIM maksimal 32 karakter'),
-    beasiswaCode: z
+    kodeBeasiswa: z
       .string()
       .nonempty('Kode beasiswa tidak boleh kosong')
       .max(5, 'Kode beasiswa maksimal 5 karakter'),
   });
   static readonly PUT: ZodType = z.object({
-    code: z
+    kode: z
       .string()
       .nonempty('Kode tidak boleh kosong')
       .max(6, 'Kode maksimal 6 karakter')
@@ -51,7 +51,7 @@ export class AlternativeValidation {
       .nonempty('NIM tidak boleh kosong')
       .min(5, 'NIM minimal 5 karakter')
       .max(32, 'NIM maksimal 32 karakter'),
-    beasiswaCode: z
+    kodeBeasiswa: z
       .string()
       .nonempty('Kode beasiswa tidak boleh kosong')
       .max(5, 'Kode beasiswa maksimal 5 karakter'),

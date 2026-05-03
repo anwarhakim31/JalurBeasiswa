@@ -6,19 +6,19 @@ export class ReqGetAllBeasiswa {
 }
 
 export class ReqPutBeasiswa {
-  code: string;
-  name: string;
-  description: string;
-  period: string;
-  isActive: boolean;
+  kode: string;
+  nama: string;
+  deskripsi: string;
+  periode: string;
+  status: boolean;
 }
 
 export class ReqPostBeasiswa {
-  code: string;
-  name: string;
-  description: string;
-  period: string;
-  isActive: boolean;
+  kode: string;
+  nama: string;
+  deskripsi: string;
+  periode: string;
+  status: boolean;
 }
 
 export class ReqDeleteBeasiswa {
@@ -27,10 +27,10 @@ export class ReqDeleteBeasiswa {
 
 export class BeasiswaResponse {
   id: string;
-  code: string;
-  name: string;
-  description: string;
-  period: string;
-  isActive: boolean;
-  createdAt?: Date;
+  kode: string;
+  nama: string;
+  deskripsi: string;
+  periode: string;
+  status: boolean;
+  dibuatPada?: Date;
 }

@@ -48,7 +48,7 @@ export class AlternativeService {
             },
           },
           {
-            code: {
+            kode: {
               contains: getReq.search,
               mode: 'insensitive',
             },
@@ -57,9 +57,9 @@ export class AlternativeService {
       });
     }
 
-    if (getReq.beasiswaCode) {
+    if (getReq.kodeBeasiswa) {
       filter.push({
-        beasiswaCode: getReq.beasiswaCode,
+        kodeBeasiswa: getReq.kodeBeasiswa,
       });
     }
 
@@ -70,19 +70,19 @@ export class AlternativeService {
       include: {
         pengguna: {
           select: {
-            fullname: true,
+            namaLengkap: true,
           },
         },
         beasiswa: {
           select: {
-            name: true,
+            nama: true,
           },
         },
       },
       skip: (getReq.page - 1) * getReq.limit,
       take: getReq.limit,
       orderBy: {
-        createdAt: 'desc',
+        kode: 'desc',
       },
     });
 
@@ -111,7 +111,7 @@ export class AlternativeService {
 
     const isExistCode = await this.prismaService.alternatif.findUnique({
       where: {
-        code: ReqPost.code,
+        kode: ReqPost.kode,
       },
     });
 
@@ -119,7 +119,7 @@ export class AlternativeService {
       throw new HttpException(
         {
           message: 'Alternatif dengan kode tersebut sudah ada',
-          path: ['code'],
+          path: ['kode'],
         },
         400,
       );
@@ -128,7 +128,7 @@ export class AlternativeService {
     const isExist = await this.prismaService.alternatif.findFirst({
       where: {
         nim: ReqPost.nim,
-        beasiswaCode: ReqPost.beasiswaCode,
+        kodeBeasiswa: ReqPost.kodeBeasiswa,
       },
     });
 
@@ -142,19 +142,19 @@ export class AlternativeService {
     const result = await this.prismaService.alternatif.create({
       data: {
         id: nanoid(8),
-        code: ReqPost.code,
+        kode: ReqPost.kode,
         nim: ReqPost.nim,
-        beasiswaCode: ReqPost.beasiswaCode,
+        kodeBeasiswa: ReqPost.kodeBeasiswa,
       },
       include: {
         beasiswa: {
           select: {
-            name: true,
+            nama: true,
           },
         },
         pengguna: {
           select: {
-            fullname: true,
+            namaLengkap: true,
           },
         },
       },
@@ -162,11 +162,11 @@ export class AlternativeService {
 
     return {
       id: result.id,
-      code: result.code,
-      name: result.beasiswa.name,
+      kode: result.kode,
+      nama: result.beasiswa.nama,
       nim: result.nim,
-      beasiswaCode: result.beasiswaCode,
-      fullname: result.pengguna.fullname,
+      kodeBeasiswa: result.kodeBeasiswa,
+      namaLengkap: result.pengguna.namaLengkap,
     };
   }
 
@@ -184,28 +184,28 @@ export class AlternativeService {
       filter.push({
         OR: [
           {
-            code: {
+            kode: {
               contains: getReq.search,
               mode: 'insensitive',
             },
           },
           {
             pengguna: {
-              fullname: {
+              namaLengkap: {
                 contains: getReq.search,
                 mode: 'insensitive',
               },
             },
           },
           {
-            beasiswaCode: {
+            kodeBeasiswa: {
               contains: getReq.search,
               mode: 'insensitive',
             },
           },
           {
             beasiswa: {
-              name: {
+              nama: {
                 contains: getReq.search,
                 mode: 'insensitive',
               },
@@ -222,36 +222,36 @@ export class AlternativeService {
       include: {
         pengguna: {
           select: {
-            fullname: true,
+            namaLengkap: true,
           },
         },
         beasiswa: {
           select: {
-            name: true,
+            nama: true,
           },
         },
       },
       skip: (getReq.page - 1) * getReq.limit,
       take: getReq.limit,
       orderBy: {
-        createdAt: 'desc',
+        dibuatPada: 'desc',
       },
     });
 
     return alternatif.map((item) => ({
       id: item.id,
       nim: item.nim,
-      fullname: item.pengguna.fullname,
-      code: item.code,
-      name: item.beasiswa.name,
-      beasiswaCode: item.beasiswaCode,
-      createdAt: item.createdAt,
+      namaLengkap: item.pengguna.namaLengkap,
+      kode: item.kode,
+      nama: item.beasiswa.nama,
+      kodeBeasiswa: item.kodeBeasiswa,
+      dibuatPada: item.dibuatPada,
     }));
   }
 
   async update(
     request: ReqPutAlternative,
-    code: string,
+    kode: string,
   ): Promise<AlternativeResponse> {
     const ReqPost: ReqPutAlternative = this.validationService.validate(
       AlternativeValidation.PUT,
@@ -260,7 +260,7 @@ export class AlternativeService {
 
     const notFoud = await this.prismaService.alternatif.findUnique({
       where: {
-        code: code,
+        kode: kode,
       },
     });
 
@@ -273,9 +273,9 @@ export class AlternativeService {
 
     const isExistCode = await this.prismaService.alternatif.findUnique({
       where: {
-        code: ReqPost.code,
+        kode: ReqPost.kode,
         NOT: {
-          code: code,
+          kode: kode,
         },
       },
     });
@@ -284,7 +284,7 @@ export class AlternativeService {
       throw new HttpException(
         {
           message: 'Alternatif dengan kode tersebut sudah ada',
-          path: ['code'],
+          path: ['kode'],
         },
         400,
       );
@@ -293,9 +293,9 @@ export class AlternativeService {
     const isExist = await this.prismaService.alternatif.findFirst({
       where: {
         nim: ReqPost.nim,
-        beasiswaCode: ReqPost.beasiswaCode,
+        kodeBeasiswa: ReqPost.kodeBeasiswa,
         NOT: {
-          code: code,
+          kode: kode,
         },
       },
     });
@@ -309,40 +309,40 @@ export class AlternativeService {
 
     const result = await this.prismaService.alternatif.update({
       where: {
-        code: code,
+        kode: kode,
       },
       data: {
-        code: ReqPost.code,
+        kode: ReqPost.kode,
         nim: ReqPost.nim,
-        beasiswaCode: ReqPost.beasiswaCode,
+        kodeBeasiswa: ReqPost.kodeBeasiswa,
       },
       include: {
         beasiswa: {
           select: {
-            name: true,
+            nama: true,
           },
         },
         pengguna: {
           select: {
-            fullname: true,
+            namaLengkap: true,
           },
         },
       },
     });
 
     return {
-      code: result.code,
+      kode: result.kode,
       id: result.id,
-      name: result.beasiswa.name,
+      nama: result.beasiswa.nama,
       nim: result.nim,
-      beasiswaCode: result.beasiswaCode,
-      fullname: result.pengguna.fullname,
+      kodeBeasiswa: result.kodeBeasiswa,
+      namaLengkap: result.pengguna.namaLengkap,
     };
   }
   async delete(request: ReqDeleteAlternative) {
     const alternatif = await this.prismaService.alternatif.findMany({
       where: {
-        code: {
+        kode: {
           in: request.selected,
         },
       },
@@ -354,7 +354,7 @@ export class AlternativeService {
 
     const deleteAlternatif = await this.prismaService.alternatif.deleteMany({
       where: {
-        code: {
+        kode: {
           in: request.selected,
         },
       },

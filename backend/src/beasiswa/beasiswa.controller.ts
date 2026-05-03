@@ -56,11 +56,11 @@ export class BeasiswaController {
 
   @UseGuards(AuthGuard, AdminGuard)
   @HttpCode(200)
-  @Get('/:code/detail')
+  @Get('/:kode/detail')
   async getByCode(
-    @Param('code') code: string,
+    @Param('kode') kode: string,
   ): Promise<WebResponse<BeasiswaResponse>> {
-    const result = await this.beasiswaService.getByCode(code);
+    const result = await this.beasiswaService.getByCode(kode);
 
     return {
       data: result,
@@ -71,11 +71,11 @@ export class BeasiswaController {
 
   @UseGuards(AuthGuard, AdminGuard)
   @HttpCode(200)
-  @Get('/:code/alternative')
+  @Get('/:kode/alternative')
   async getByAlternativeCode(
-    @Param('code') code: string,
+    @Param('kode') kode: string,
   ): Promise<WebResponse<BeasiswaResponse>> {
-    const result = await this.beasiswaService.getByCode(code);
+    const result = await this.beasiswaService.getByCode(kode);
 
     return {
       data: result,
@@ -102,9 +102,9 @@ export class BeasiswaController {
       success: true,
       message: 'Berhasil mengambil data beasiswa',
       data: res.data.map((item) => ({
-        id: item.code,
-        label: item.name,
-        value: item.code,
+        id: item.kode,
+        label: item.nama,
+        value: item.kode,
       })),
     };
   }
@@ -124,14 +124,14 @@ export class BeasiswaController {
     };
   }
 
-  @Put('/:code/update')
+  @Put('/:kode/update')
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
   async update(
     @Body() request: ReqPutBeasiswa,
-    @Param('code') code: string,
+    @Param('kode') kode: string,
   ): Promise<WebResponse<BeasiswaResponse>> {
-    const res = await this.beasiswaService.update(request, code);
+    const res = await this.beasiswaService.update(request, kode);
     return {
       success: true,
       message: 'Berhasil mengubah data beasiswa',
@@ -152,14 +152,14 @@ export class BeasiswaController {
     };
   }
 
-  @Patch('/:code/status')
+  @Patch('/:kode/status')
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)
   async changeStatus(
-    @Param('code') code: string,
-    @Body() request: { isActive: boolean },
-  ): Promise<WebResponse<{ name: string }>> {
-    const res = await this.beasiswaService.changeStatus(request, code);
+    @Param('kode') kode: string,
+    @Body() request: { status: boolean },
+  ): Promise<WebResponse<{ nama: string }>> {
+    const res = await this.beasiswaService.changeStatus(request, kode);
 
     return {
       success: true,

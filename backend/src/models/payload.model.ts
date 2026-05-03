@@ -1,7 +1,7 @@
 export class JwtPayload {
   nim: string;
   email: string;
-  fullname?: string;
-  photo?: string;
-  isAdmin?: boolean;
+  namaLengkap?: string;
+  foto?: string;
+  admin?: boolean;
 }

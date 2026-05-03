@@ -9,113 +9,111 @@ datasource db {
 }
 
 
-model Pengguna{
-  nim       String @id @unique @db.VarChar(32)
-  email     String @unique
-  fullname  String?
-  password  String
-  photo     String?
-  status    UserStatus @default(PENDING)
-  prodi     String?
-  batch     Int?
-  isAdmin   Boolean @default(false)
+model Pengguna {
+  nim          String      @id @unique @db.VarChar(32)
+  email        String      @unique
+  namaLengkap  String?
+  kataSandi    String
+  foto         String?
+  status       StatusPengguna  @default(Menunggu)
+  prodi        String?
+  angkatan     Int?
+  admin        Boolean     @default(false)
 
-  alternatif Alternatif[]
+  alternatif   Alternatif[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  dibuatPada   DateTime @default(now())
+  diubahPada   DateTime @updatedAt
 }
 
 model Beasiswa {
   id          String   @id @default(cuid())
-  code        String   @unique
-  name        String
-  description  String
-  period      String   // contoh: "2026"
-  isActive    Boolean  @default(true)
+  kode        String   @unique
+  nama        String
+  deskripsi   String
+  periode     String   // contoh: "2026"
+  status       Boolean  @default(true)
 
+  publikasi   Boolean @default(false)
   alternatif  Alternatif[]
   kriteria   Kriteria[]
 
   hasil Hasil[]
 
-  createdAt    DateTime @default(now())
+  dibuatPada    DateTime @default(now())
 }
 
 model Kriteria {
   id            String   @id @default(cuid())
-  code          String   @unique
-  name          String   // IPK, Penghasilan, dll
-  type          creteriaType   // "benefit" | "cost"
-  weight        Float
+  kode          String   @unique
+  nama          String   // IPK, Penghasilan, dll
+  tipe          TipeKriteria   // "benefit" | "cost"
+  bobot        Float
 
-  beasiswaCode  String
-  beasiswa      Beasiswa      @relation(fields: [beasiswaCode], references: [code] ,onDelete: Cascade)
+  kodeBeasiswa  String
+  beasiswa      Beasiswa      @relation(fields: [kodeBeasiswa], references: [kode] ,onDelete: Cascade)
 
-  values        NilaiAlternatif[]
-  createdAt     DateTime @default(now())
-
-
-
+  nilaiAlternatif        NilaiAlternatif[]
+  dibuatPada     DateTime @default(now())
 }
 
 model Alternatif {
   id            String   @id @default(cuid())
-  code          String   @unique
-  beasiswaCode  String
+  kode          String   @unique
+  kodeBeasiswa  String
   nim           String
 
-  values        NilaiAlternatif[]
+  nilaiAlternatif  NilaiAlternatif[]
 
   pengguna      Pengguna  @relation(fields: [nim], references: [nim],onDelete: Cascade)
-  beasiswa      Beasiswa  @relation(fields: [beasiswaCode], references: [code], onDelete: Cascade)
+  beasiswa      Beasiswa  @relation(fields: [kodeBeasiswa], references: [kode], onDelete: Cascade)
 
   hasil         Hasil[]
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now())
+  dibuatPada     DateTime @default(now())
+  diubahPada     DateTime @default(now())
 
-  @@unique([nim, beasiswaCode]) 
+  @@unique([nim, kodeBeasiswa]) 
 }
 
 model NilaiAlternatif {
   id            String   @id @default(cuid())
-  value         Float
+  nilai         Float
 
-  alternativeCode String
-  kriteriaCode    String
+  kodeAlternatif String
+  kodeKriteria    String
 
-  alternatif  Alternatif    @relation(fields: [alternativeCode], references: [code],onDelete: Cascade)
-  kriteria      Kriteria    @relation(fields: [kriteriaCode], references: [code],onDelete: Cascade)
+  alternatif  Alternatif    @relation(fields: [kodeAlternatif], references: [kode],onDelete: Cascade)
+  kriteria      Kriteria    @relation(fields: [kodeKriteria], references: [kode],onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
+  dibuatPada   DateTime @default(now())
   
-  @@unique([alternativeCode, kriteriaCode]) // biar tidak double
+  @@unique([kodeAlternatif, kodeKriteria]) // biar tidak double
 }
 
 model Hasil {
   id            String @id @default(cuid())
-  score         Float
-  rank          Int
+  nilai         Float
+  peringkat          Int
 
-  alternativeCode String
-  beasiswaCode    String
+  kodeAlternatif String
+  kodeBeasiswa    String
 
-  alternatif    Alternatif @relation(fields: [alternativeCode], references: [code],onDelete: Cascade)
-  beasiswa      Beasiswa   @relation(fields: [beasiswaCode], references: [code],onDelete: Cascade)
+  alternatif    Alternatif @relation(fields: [kodeAlternatif], references: [kode],onDelete: Cascade)
+  beasiswa      Beasiswa   @relation(fields: [kodeBeasiswa], references: [kode],onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
+  dibuatPada   DateTime @default(now())
 
-  @@unique([alternativeCode, beasiswaCode]) // 1 alternatif hanya 1 hasil per beasiswa
+  @@unique([kodeAlternatif, kodeBeasiswa]) // 1 alternatif hanya 1 hasil per beasiswa
 }
 
-enum UserStatus {
-  ACCEPT
-  PENDING
-  REJECTED
+enum StatusPengguna {
+  Diterima
+  Menunggu
+  Ditolak
 }
 
-enum creteriaType {
-  BENEFIT
-  COST
+enum  TipeKriteria {
+  Keuntungan
+  Biaya
 }

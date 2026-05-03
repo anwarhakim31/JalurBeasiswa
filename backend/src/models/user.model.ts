@@ -1,12 +1,12 @@
 export class ReqEditUser {
-  fullname?: string;
-  photo?: string;
+  namaLengkap?: string;
+  foto?: string;
   email: string;
 }
 
-export class ReqEditPassword {
-  password: string;
-  newPassword: string;
+export class ReqEditkataSandi {
+  kataSandi: string;
+  kataSandiBaru: string;
 }
 
 export class ReqGetAllUser {
@@ -17,25 +17,25 @@ export class ReqGetAllUser {
 }
 
 export class ReqPutPengguna {
-  fullname?: string;
-  photo?: string;
+  namaLengkap?: string;
+  foto?: string;
   email: string;
   status: string;
   nim: string;
   prodi?: string;
-  batch?: number;
-  password?: string;
+  angkatan?: number;
+  kataSandi?: string;
 }
 
 export class ReqPostPengguna {
-  fullname?: string;
-  photo?: string;
+  namaLengkap?: string;
+  foto?: string;
   email: string;
   status: string;
   nim: string;
   prodi?: string;
-  batch?: number;
-  password: string;
+  angkatan?: number;
+  kataSandi: string;
 }
 
 export class ReqDeletePengguna {
@@ -46,7 +46,7 @@ export class UserResponse {
   nim: string;
   email: string;
   status?: string;
-  fullname?: string;
-  createdAt?: Date;
-  photo?: string;
+  namaLengkap?: string;
+  dibuatPada?: Date;
+  foto?: string;
 }

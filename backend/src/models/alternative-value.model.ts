@@ -1,23 +1,23 @@
-export class KRITERIAVALUE {
-  kriteriaCode: string;
-  value: number;
+export class NILAIALTERNATIF {
+  kodeKriteria: string;
+  nilai: number;
 }
 export class ReqGetAllAlternativeValue {
   page?: number;
   search?: string;
   limit?: number;
-  alternativeCode?: string;
-  kriteriaCode?: string;
+  kodeAlternatif?: string;
+  kodeKriteria?: string;
 }
 
 export class ReqPutAlternativeValue {
-  alternativeCode: string;
-  values: KRITERIAVALUE[];
+  kodeAlternatif: string;
+  nilaiAlternatif: NILAIALTERNATIF[];
 }
 
 export class ReqPostAlternativeValue {
-  alternativeCode: string;
-  values: KRITERIAVALUE[];
+  kodeAlternatif: string;
+  nilaiAlternatif: NILAIALTERNATIF[];
 }
 
 export class ReqDeleteAlternativeValue {
@@ -25,15 +25,15 @@ export class ReqDeleteAlternativeValue {
 }
 
 export class AlternativeValueResponse {
-  alternativeCode: string;
+  kodeAlternatif: string;
   alternatif: {
     pengguna: {
-      fullname: string;
+      namaLengkap: string;
     };
   };
-  kriteriaCode: string;
+  kodeKriteria: string;
   kriteria: {
-    name: string;
+    nama: string;
   };
-  value: number;
+  nilai: number;
 }

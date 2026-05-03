@@ -5,12 +5,12 @@ export class CrteriaValidation {
     search: z.string().optional(),
     page: z.number().min(1).optional(),
     limit: z.number().min(10).optional(),
-    type: z.string().optional(),
-    beasiswaCode: z.string().optional(),
+    tipe: z.string().optional(),
+    kodeBeasiswa: z.string().optional(),
   });
 
   static readonly CREATE: ZodType = z.object({
-    code: z
+    kode: z
       .string()
       .nonempty('Kode tidak boleh kosong')
       .max(6, 'Kode maksimal 6 karakter')
@@ -23,16 +23,16 @@ export class CrteriaValidation {
           message: 'Kode harus mengandung angka dan huruf',
         },
       ),
-    name: z
+    nama: z
       .string()
       .nonempty('Nama tidak boleh kosong')
       .max(125, 'Nama maksimal 125 karakter'),
-    type: z
+    tipe: z
       .string()
       .nonempty('Tipe tidak boleh kosong')
       .max(125, 'Tipe maksimal 125 karakter'),
-    weight: z.number().min(0).max(1),
-    beasiswaCode: z
+    bobot: z.number().min(0).max(1),
+    kodeBeasiswa: z
       .string()
       .nonempty('Kode tidak boleh kosong')
       .max(6, 'Kode maksimal 6 karakter')
@@ -48,7 +48,7 @@ export class CrteriaValidation {
   });
 
   static readonly PUT: ZodType = z.object({
-    code: z
+    kode: z
       .string()
       .nonempty('Kode tidak boleh kosong')
       .max(6, 'Kode maksimal 6 karakter')
@@ -61,16 +61,16 @@ export class CrteriaValidation {
           message: 'Kode harus mengandung angka dan huruf',
         },
       ),
-    name: z
+    nama: z
       .string()
       .nonempty('Nama tidak boleh kosong')
       .max(125, 'Nama maksimal 125 karakter'),
-    type: z
+    tipe: z
       .string()
       .nonempty('Tipe tidak boleh kosong')
       .max(125, 'Tipe maksimal 125 karakter'),
-    weight: z.number().min(0).max(1),
-    beasiswaCode: z
+    bobot: z.number().min(0).max(1),
+    kodeBeasiswa: z
       .string()
       .nonempty('Kode tidak boleh kosong')
       .max(6, 'Kode maksimal 6 karakter')
@@ -85,7 +85,7 @@ export class CrteriaValidation {
       ),
   });
   static readonly TYPE: ZodType = z.object({
-    type: z
+    tipe: z
       .string()
       .nonempty('Tipe tidak boleh kosong')
       .max(32, 'Tipe maksimal 32 karakter'),

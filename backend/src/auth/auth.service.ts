@@ -29,25 +29,28 @@ export class AuthService {
       },
     });
 
-    if (userExits && userExits.status === 'ACCEPT') {
+    if (userExits && userExits.status === 'Diterima') {
       throw new HttpException('NIM atau email sudah digunakan', 400);
     }
 
-    if (userExits && userExits.status === 'PENDING') {
+    if (userExits && userExits.status === 'Menunggu') {
       throw new HttpException(
         'Akun Anda sedang dalam proses verifikasi. Silakan tunggu hingga proses selesai.',
         400,
       );
     }
 
-    if (userExits && userExits.status === 'REJECTED') {
+    if (userExits && userExits.status === 'Ditolak') {
       throw new HttpException(
         'Pendaftaran Anda ditolak. Silakan periksa kembali data yang dimasukkan.',
         400,
       );
     }
 
-    registerRequest.password = await bcrypt.hash(registerRequest.password, 10);
+    registerRequest.kataSandi = await bcrypt.hash(
+      registerRequest.kataSandi,
+      10,
+    );
 
     const user = await this.prismaService.pengguna.create({
       data: registerRequest,
@@ -56,7 +59,7 @@ export class AuthService {
     return {
       nim: user.nim,
       email: user.email,
-      isAdmin: user.isAdmin,
+      admin: user.admin,
     };
   }
 
@@ -79,14 +82,14 @@ export class AuthService {
       throw new HttpException('Nama pengguna atau kata sandi salah', 401);
     }
 
-    if (user.status === 'PENDING') {
+    if (user.status === 'Menunggu') {
       throw new HttpException(
         'Akun Anda sedang dalam proses verifikasi. Silakan tunggu hingga proses selesai.',
         400,
       );
     }
 
-    if (user.status === 'REJECTED') {
+    if (user.status === 'Ditolak') {
       throw new HttpException(
         'Pendaftaran Anda ditolak. Silakan periksa kembali data yang dimasukkan.',
         400,
@@ -94,8 +97,8 @@ export class AuthService {
     }
 
     const isPasswordValid = await bcrypt.compare(
-      loginRequest.password,
-      user.password,
+      loginRequest.kataSandi,
+      user.kataSandi,
     );
 
     if (!isPasswordValid) {
@@ -104,10 +107,10 @@ export class AuthService {
 
     return {
       nim: user.nim,
-      fullname: user.fullname,
+      namaLengkap: user.namaLengkap,
       email: user.email,
-      isAdmin: user.isAdmin,
-      photo: user.photo,
+      admin: user.admin,
+      foto: user.foto,
     };
   }
 
@@ -127,22 +130,22 @@ export class AuthService {
       throw new HttpException('Pengguna tidak ditemukan', 401);
     }
 
-    if (user.status === 'PENDING') {
+    if (user.status === 'Menunggu') {
       throw new HttpException(
         'Akun Anda sedang dalam proses verifikasi. Silakan tunggu hingga proses selesai.',
         400,
       );
     }
 
-    if (user.status === 'REJECTED') {
+    if (user.status === 'Ditolak') {
       throw new HttpException(
         'Pendaftaran Anda ditolak. Silakan periksa kembali data yang dimasukkan.',
         400,
       );
     }
 
-    forgetRequest.newPassword = await bcrypt.hash(
-      forgetRequest.newPassword,
+    forgetRequest.kataSandiBaru = await bcrypt.hash(
+      forgetRequest.kataSandiBaru,
       10,
     );
 
@@ -151,15 +154,15 @@ export class AuthService {
         nim: user.nim,
       },
       data: {
-        password: forgetRequest.newPassword,
+        kataSandi: forgetRequest.kataSandiBaru,
       },
     });
 
     return {
       nim: user.nim,
-      fullname: user.fullname,
+      namaLengkap: user.namaLengkap,
       email: user.email,
-      isAdmin: user.isAdmin,
+      admin: user.admin,
     };
   }
 
@@ -176,10 +179,10 @@ export class AuthService {
 
     return {
       nim: user.nim,
-      fullname: user.fullname,
+      namaLengkap: user.namaLengkap,
       email: user.email,
-      isAdmin: user.isAdmin,
-      photo: user.photo,
+      admin: user.admin,
+      foto: user.foto,
     };
   }
 }
