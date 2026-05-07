@@ -180,6 +180,26 @@ export class CriteriaService {
       );
     }
 
+    const firstLetter = criteriaReq.kode.toUpperCase().charAt(0) !== 'C';
+    const onlyThisLetter = /^C\d+$/i.test(criteriaReq.kode);
+
+    if (firstLetter) {
+      throw new HttpException(
+        { message: 'Kode harus dimulai dengan C', field: ['kode'] },
+        400,
+      );
+    }
+
+    if (!onlyThisLetter) {
+      throw new HttpException(
+        {
+          message: 'Kode hanya boleh menggunakan huruf C dan angka',
+          field: ['kode'],
+        },
+        400,
+      );
+    }
+
     const isExistCode = await this.prismaService.kriteria.findUnique({
       where: {
         kode: criteriaReq.kode,
@@ -282,6 +302,26 @@ export class CriteriaService {
           path: ['kode'],
         },
         404,
+      );
+    }
+
+    const firstLetter = criteriaReq.kode.toUpperCase().charAt(0) !== 'C';
+    const onlyThisLetter = /^C\d+$/i.test(criteriaReq.kode);
+
+    if (firstLetter) {
+      throw new HttpException(
+        { message: 'Kode harus dimulai dengan C', field: ['kode'] },
+        400,
+      );
+    }
+
+    if (!onlyThisLetter) {
+      throw new HttpException(
+        {
+          message: 'Kode hanya boleh menggunakan huruf C dan angka',
+          field: ['kode'],
+        },
+        400,
       );
     }
 

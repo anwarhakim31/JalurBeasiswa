@@ -32,5 +32,6 @@ export class BeasiswaResponse {
   deskripsi: string;
   periode: string;
   status: boolean;
+  publikasi?: boolean;
   dibuatPada?: Date;
 }

@@ -164,9 +164,42 @@ export class UserValidation {
   });
 
   static readonly EditProfie: ZodType = z.object({
-    namaLengkap: z.string().min(1),
-    email: z.string().min(1),
+    namaLengkap: z
+      .string()
+      .max(100, 'Nama Lengkap maksimal 100 karakter')
+      .optional()
+      .refine(
+        (val) => {
+          if (!val) return true;
+          return val.length >= 5;
+        },
+        {
+          message: 'Nama Lengkap minimal 5 karakter',
+        },
+      ),
+    email: z
+      .string()
+      .nonempty('Email tidak boleh kosong')
+      .email('Email tidak valid'),
     foto: z.string().optional(),
+    prodi: z
+      .string()
+      .max(100, 'Program Studi maksimal 100 karakter')
+      .optional()
+      .refine(
+        (val) => {
+          if (!val) return true;
+          return val.length >= 5;
+        },
+        {
+          message: 'Program Studi minimal 5 karakter',
+        },
+      ),
+    angkatan: z
+      .number()
+      .min(1900, 'Tahun angkatan minimal 1900')
+      .max(new Date().getFullYear(), 'Tahun angkatan maksimal tahun sekarang')
+      .optional(),
   });
 
   static readonly ChangekataSandi: ZodType = z.object({

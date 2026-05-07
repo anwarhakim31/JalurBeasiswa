@@ -1,5 +1,7 @@
 export class ReqEditUser {
   namaLengkap?: string;
+  prodi?: string;
+  angkatan?: number;
   foto?: string;
   email: string;
 }
@@ -47,6 +49,8 @@ export class UserResponse {
   email: string;
   status?: string;
   namaLengkap?: string;
+  prodi?: string;
+  angkatan?: number;
   dibuatPada?: Date;
   foto?: string;
 }

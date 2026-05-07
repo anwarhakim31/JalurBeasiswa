@@ -1,6 +1,8 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import {
   ReqDeletePengguna,
+  ReqEditkataSandi,
+  ReqEditUser,
   ReqGetAllUser,
   ReqPostPengguna,
   ReqPutPengguna,
@@ -467,88 +469,115 @@ export class UserService {
     });
     return user;
   }
-  // async editProfile(request: ReqEditUser, nim: string): Promise<UserResponse> {
-  //   const RequestEdit: ReqEditUser = this.validationService.validate(
-  //     UserValidation.EditProfie,
-  //     request,
-  //   ) as ReqEditUser;
+  async editProfile(request: ReqEditUser, nim: string): Promise<UserResponse> {
+    const RequestEdit: ReqEditUser = this.validationService.validate(
+      UserValidation.EditProfie,
+      request,
+    ) as ReqEditUser;
 
-  //   const user = await this.prismaService.pengguna.update({
-  //     where: {
-  //       nim: nim,
-  //     },
-  //     data: {
-  //       namaLengkap: RequestEdit.namaLengkap,
-  //       foto: RequestEdit.foto,
-  //       email: RequestEdit.email,
-  //     },
-  //   });
+    const notFound = await this.prismaService.pengguna.findUnique({
+      where: {
+        nim: nim,
+      },
+    });
 
-  //   return {
-  //     nim: user.nim,
-  //     namaLengkap: user.namaLengkap,
-  //     foto: user.foto,
-  //     email: user.email,
-  //   };
-  // }
-  // async changePassword(
-  //   nim: string,
-  //   request: ReqEditPassword,
-  // ): Promise<UserResponse> {
-  //   const EditRequest: ReqEditPassword = this.validationService.validate(
-  //     UserValidation.ChangePassword,
-  //     request,
-  //   ) as ReqEditPassword;
+    if (!notFound) {
+      throw new HttpException('Pengguna tidak ditemukan', 404);
+    }
 
-  //   const user = await this.prismaService.pengguna.findUnique({
-  //     where: {
-  //       nim: nim,
-  //     },
-  //   });
+    let user = await this.prismaService.pengguna.update({
+      where: {
+        nim: nim,
+      },
+      data: {
+        namaLengkap: RequestEdit.namaLengkap,
+        foto: RequestEdit.foto,
+        email: RequestEdit.email,
+      },
+    });
 
-  //   if (!user) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'pengguna tidak ditemukan',
-  //         path: ['nim'],
-  //       },
-  //       404,
-  //     );
-  //   }
+    if (RequestEdit.prodi && RequestEdit.angkatan) {
+      user = await this.prismaService.pengguna.update({
+        where: {
+          nim: nim,
+        },
+        data: {
+          prodi: RequestEdit.prodi,
+          angkatan: RequestEdit.angkatan,
+        },
+      });
+    }
 
-  //   const isPasswordValid = await bcrypt.compare(
-  //     EditRequest.password,
-  //     user.password,
-  //   );
+    return {
+      nim: user.nim,
+      namaLengkap: user.namaLengkap,
+      foto: user.foto,
+      email: user.email,
+      prodi: user.prodi,
+      angkatan: user.angkatan,
+    };
+  }
+  async changePassword(
+    nim: string,
+    request: ReqEditkataSandi,
+  ): Promise<UserResponse> {
+    const EditRequest: ReqEditkataSandi = this.validationService.validate(
+      UserValidation.ChangekataSandi,
+      request,
+    ) as ReqEditkataSandi;
 
-  //   if (!isPasswordValid) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'Kata sandi tidak valid',
-  //         path: ['password'],
-  //       },
-  //       400,
-  //     );
-  //   }
+    const user = await this.prismaService.pengguna.findUnique({
+      where: {
+        nim: nim,
+      },
+    });
 
-  //   const gensalt = await bcrypt.genSalt(10);
+    if (!user) {
+      throw new HttpException(
+        {
+          message: 'pengguna tidak ditemukan',
+          path: ['nim'],
+        },
+        404,
+      );
+    }
 
-  //   const hashedPassword = await bcrypt.hash(EditRequest.newPassword, gensalt);
+    const isPasswordValid = await bcrypt.compare(
+      EditRequest.kataSandi,
+      user.kataSandi,
+    );
 
-  //   const updated = await this.prismaService.pengguna.update({
-  //     where: {
-  //       nim: nim,
-  //     },
-  //     data: {
-  //       password: hashedPassword,
-  //     },
-  //   });
+    if (!isPasswordValid) {
+      throw new HttpException(
+        {
+          message: 'Kata sandi lama salah',
+          path: ['kataSandi'],
+        },
+        400,
+      );
+    }
 
-  //   return {
-  //     nim: updated.nim,
-  //     namaLengkap: updated.namaLengkap,
-  //     foto: updated?.foto || null,
-  //     email: updated.email,
-  //   };
-  // }
+    const gensalt = await bcrypt.genSalt(10);
+
+    const hashedPassword = await bcrypt.hash(
+      EditRequest.kataSandiBaru,
+      gensalt,
+    );
+
+    const updated = await this.prismaService.pengguna.update({
+      where: {
+        nim: nim,
+      },
+      data: {
+        kataSandi: hashedPassword,
+      },
+    });
+
+    return {
+      nim: updated.nim,
+      namaLengkap: updated.namaLengkap,
+      foto: updated?.foto || null,
+      email: updated.email,
+    };
+  }
 }

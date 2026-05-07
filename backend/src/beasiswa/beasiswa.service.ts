@@ -178,11 +178,70 @@ export class BeasiswaService {
     };
   }
 
+  async publish(kode: string): Promise<BeasiswaResponse> {
+    const beasiswa = await this.prismaService.beasiswa.findUnique({
+      where: {
+        kode: kode,
+      },
+      select: {
+        id: true,
+        kode: true,
+        nama: true,
+        deskripsi: true,
+        periode: true,
+        status: true,
+        publikasi: true,
+        dibuatPada: true,
+      },
+    });
+
+    if (!beasiswa) {
+      throw new HttpException(
+        {
+          message: 'Beasiswa tidak ditemukan',
+          path: ['kode'],
+        },
+        404,
+      );
+    }
+
+    const result = await this.prismaService.beasiswa.update({
+      where: {
+        id: beasiswa.id,
+      },
+      data: {
+        publikasi: !beasiswa.publikasi,
+      },
+    });
+
+    return result;
+  }
+
   async create(request: ReqPostBeasiswa): Promise<BeasiswaResponse> {
     const ReqPost: ReqPostBeasiswa = this.validationService.validate(
       BeasiswaValidation.CREATE,
       request,
     ) as ReqPostBeasiswa;
+
+    const firstLetter = ReqPost.kode.toUpperCase().charAt(0) !== 'B';
+    const onlyThisLetter = /^B\d+$/i.test(ReqPost.kode);
+
+    if (firstLetter) {
+      throw new HttpException(
+        { message: 'Kode harus dimulai dengan B', field: ['kode'] },
+        400,
+      );
+    }
+
+    if (!onlyThisLetter) {
+      throw new HttpException(
+        {
+          message: 'Kode hanya boleh menggunakan huruf B dan angka',
+          field: ['kode'],
+        },
+        400,
+      );
+    }
 
     const isExistCode = await this.prismaService.beasiswa.findUnique({
       where: {
@@ -217,7 +276,7 @@ export class BeasiswaService {
     const result = await this.prismaService.beasiswa.create({
       data: {
         id: nanoid(8),
-        kode: ReqPost.kode,
+        kode: ReqPost.kode.toUpperCase(),
         nama: ReqPost.nama,
         deskripsi: ReqPost.deskripsi,
         periode: ReqPost.periode,
@@ -261,8 +320,27 @@ export class BeasiswaService {
 
     if (!notFoud) {
       throw new HttpException(
-        'Beasiswa dengan id tersebut tidak ditemukan',
+        'Beasiswa dengan kode tersebut tidak ditemukan',
         404,
+      );
+    }
+    const firstLetter = ReqPost.kode.toUpperCase().charAt(0) !== 'B';
+    const onlyThisLetter = /^B\d+$/i.test(ReqPost.kode);
+
+    if (firstLetter) {
+      throw new HttpException(
+        { message: 'Kode harus dimulai dengan B', field: ['kode'] },
+        400,
+      );
+    }
+
+    if (!onlyThisLetter) {
+      throw new HttpException(
+        {
+          message: 'Kode hanya boleh menggunakan huruf B dan angka',
+          field: ['kode'],
+        },
+        400,
       );
     }
 

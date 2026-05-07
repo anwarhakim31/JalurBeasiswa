@@ -161,9 +161,9 @@ export class ProcessValuesService {
         (acc, k) => {
           acc[k.nama] =
             k.tipe === 'Keuntungan'
-              ? `${nilaiMap.get(k.kode) ? `${nilaiMap.get(k.kode)}/${stats.get(k.kode)?.max}` : '-'}  `
+              ? `${nilaiMap.get(k.kode) ? `${new Intl.NumberFormat('id-ID').format(nilaiMap.get(k.kode))}/${new Intl.NumberFormat('id-ID').format(stats.get(k.kode)?.max)}` : '-'}  `
               : nilaiMap.get(k.kode)
-                ? `${stats.get(k.kode)?.min}/${nilaiMap.get(k.kode)}`
+                ? `${new Intl.NumberFormat('id-ID').format(stats.get(k.kode)?.min)}/${new Intl.NumberFormat('id-ID').format(nilaiMap.get(k.kode))}`
                 : '-';
           return acc;
         },
@@ -635,6 +635,7 @@ export class ProcessValuesService {
         kode: beasiswa.kode,
         nama: beasiswa.nama,
         periode: beasiswa.periode,
+        publikasi: beasiswa.publikasi,
       },
       ranking: alternatif.map((x) => ({
         kode: x.alternatif.kode,

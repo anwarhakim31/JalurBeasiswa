@@ -18,6 +18,8 @@ import { AuthGuard } from '../guards/auth.guard';
 import { WebResponse } from '../models/web.model';
 import {
   ReqDeletePengguna,
+  ReqEditkataSandi,
+  ReqEditUser,
   ReqGetAllUser,
   ReqPostPengguna,
   ReqPutPengguna,
@@ -25,6 +27,8 @@ import {
 } from '../models/user.model';
 
 import { Pengguna } from '@prisma/client';
+import { User } from '../decorator/user.decorator';
+import { AuthResponse } from '../models/auth.model';
 
 @Controller('/api/user')
 export class UserController {
@@ -154,23 +158,35 @@ export class UserController {
     };
   }
 
-  // @HttpCode(200)
-  // @UseGuards(AuthGuard)
-  // @Patch('/profile')
-  // async editProfile(
-  //   @Body() request: ReqEditUser,
-  //   @User() user: AuthResponse,
-  // ): Promise<UserResponse> {
-  //   return this.userService.editProfile(request, user.nim);
-  // }
+  @HttpCode(200)
+  @UseGuards(AuthGuard)
+  @Patch('/change-profile')
+  async editProfile(
+    @Body() request: ReqEditUser,
+    @User() user: AuthResponse,
+  ): Promise<WebResponse<UserResponse>> {
+    const result = await this.userService.editProfile(request, user.nim);
 
-  // @HttpCode(200)
-  // @UseGuards(AuthGuard)
-  // @Patch('/password')
-  // async changePassword(
-  //   @Body() request: ReqEditPassword,
-  //   @User() user: AuthResponse,
-  // ): Promise<UserResponse> {
-  //   return this.userService.changePassword(user.nim, request);
-  // }
+    return {
+      data: result as Pengguna,
+      success: true,
+      message: 'Berhasil mengubah data pengguna',
+    };
+  }
+
+  @HttpCode(200)
+  @UseGuards(AuthGuard)
+  @Patch('/change-password')
+  async changePassword(
+    @Body() request: ReqEditkataSandi,
+    @User() user: AuthResponse,
+  ): Promise<WebResponse<UserResponse>> {
+    const result = await this.userService.changePassword(user.nim, request);
+
+    return {
+      data: result as Pengguna,
+      success: true,
+      message: 'Berhasil mengubah kata sandi',
+    };
+  }
 }

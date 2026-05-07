@@ -98,7 +98,7 @@ model Hasil {
 
   kodeAlternatif String
   kodeBeasiswa    String
-
+  status         StatusHasil @default(Diproses)
   alternatif    Alternatif @relation(fields: [kodeAlternatif], references: [kode],onDelete: Cascade)
   beasiswa      Beasiswa   @relation(fields: [kodeBeasiswa], references: [kode],onDelete: Cascade)
 
@@ -111,6 +111,12 @@ enum StatusPengguna {
   Diterima
   Menunggu
   Ditolak
+}
+
+enum StatusHasil { 
+  Diterima
+  Ditolak
+  Diproses
 }
 
 enum  TipeKriteria {

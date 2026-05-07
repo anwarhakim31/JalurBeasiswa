@@ -71,6 +71,21 @@ export class BeasiswaController {
 
   @UseGuards(AuthGuard, AdminGuard)
   @HttpCode(200)
+  @Patch('/:kodeBeasiswa/publish')
+  async publish(
+    @Param('kodeBeasiswa') kode: string,
+  ): Promise<WebResponse<BeasiswaResponse>> {
+    const result = await this.beasiswaService.publish(kode);
+
+    return {
+      data: result,
+      success: true,
+      message: 'Berhasil mengubah nilai publikasi beasiswa',
+    };
+  }
+
+  @UseGuards(AuthGuard, AdminGuard)
+  @HttpCode(200)
   @Get('/:kode/alternative')
   async getByAlternativeCode(
     @Param('kode') kode: string,

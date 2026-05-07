@@ -109,6 +109,26 @@ export class AlternativeService {
       request,
     ) as ReqPostAlternative;
 
+    const firstLetter = ReqPost.kode.toUpperCase().charAt(0) !== 'A';
+    const onlyThisLetter = /^A\d+$/i.test(ReqPost.kode);
+
+    if (firstLetter) {
+      throw new HttpException(
+        { message: 'Kode harus dimulai dengan A', field: ['kode'] },
+        400,
+      );
+    }
+
+    if (!onlyThisLetter) {
+      throw new HttpException(
+        {
+          message: 'Kode hanya boleh menggunakan huruf A dan angka',
+          field: ['kode'],
+        },
+        400,
+      );
+    }
+
     const isExistCode = await this.prismaService.alternatif.findUnique({
       where: {
         kode: ReqPost.kode,
@@ -268,6 +288,25 @@ export class AlternativeService {
       throw new HttpException(
         'Alternatif dengan kode tersebut tidak ditemukan',
         404,
+      );
+    }
+    const firstLetter = ReqPost.kode.toUpperCase().charAt(0) !== 'A';
+    const onlyThisLetter = /^A\d+$/i.test(ReqPost.kode);
+
+    if (firstLetter) {
+      throw new HttpException(
+        { message: 'Kode harus dimulai dengan A', field: ['kode'] },
+        400,
+      );
+    }
+
+    if (!onlyThisLetter) {
+      throw new HttpException(
+        {
+          message: 'Kode hanya boleh menggunakan huruf A dan angka',
+          field: ['kode'],
+        },
+        400,
       );
     }
 
