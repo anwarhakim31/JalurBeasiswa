@@ -1,9 +1,11 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
   Param,
   ParseIntPipe,
+  Patch,
   Query,
   Res,
   UseGuards,
@@ -58,6 +60,26 @@ export class ProcessValuesController {
       success: true,
       message: 'Berhasil mengambil data ranking',
       data: data,
+    });
+  }
+
+  @Patch('/change-status')
+  @HttpCode(200)
+  @UseGuards(AuthGuard, AdminGuard)
+  async status(
+    @Res() res: Response,
+    @Body()
+    request: {
+      selected: string[];
+      status: 'Disetujui' | 'Ditolak' | 'Diproses';
+    },
+  ): Promise<void> {
+    const result = await this.processValuesService.changeStatus(request);
+
+    res.json({
+      success: true,
+      message: 'Berhasil mengubah status',
+      data: result,
     });
   }
 }

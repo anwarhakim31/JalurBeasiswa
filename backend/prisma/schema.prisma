@@ -114,7 +114,7 @@ enum StatusPengguna {
 }
 
 enum StatusHasil { 
-  Diterima
+  Disetujui
   Ditolak
   Diproses
 }

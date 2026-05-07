@@ -1,6 +1,7 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
 import { nanoid } from 'nanoid/non-secure';
+import { StatusHasil } from '@prisma/client';
 
 @Injectable()
 export class ProcessValuesService {
@@ -638,10 +639,12 @@ export class ProcessValuesService {
         publikasi: beasiswa.publikasi,
       },
       ranking: alternatif.map((x) => ({
+        id: x.id,
         kode: x.alternatif.kode,
         namaLengkap: x.alternatif.pengguna.namaLengkap,
         nilai: x.nilai,
         peringkat: x.peringkat,
+        status: x.status,
       })),
       pagging: {
         total: total || 0,
@@ -650,5 +653,51 @@ export class ProcessValuesService {
         totalPage: Math.ceil(total / 100),
       },
     };
+  }
+
+  async changeStatus(request: {
+    selected: string[];
+    status: 'Disetujui' | 'Ditolak' | 'Diproses';
+  }) {
+    const statusMap: Record<string, StatusHasil> = {
+      Disetujui: StatusHasil.Disetujui,
+      Diproses: StatusHasil.Diproses,
+      Ditolak: StatusHasil.Ditolak,
+    };
+
+    if (!statusMap[request.status]) {
+      throw new HttpException('Status tidak valid', 404);
+    }
+
+    const NilaiHaslKeputusan = await this.prismaService.hasil.findMany({
+      where: {
+        id: {
+          in: request.selected,
+        },
+      },
+    });
+
+    if (
+      NilaiHaslKeputusan.length == 0 ||
+      NilaiHaslKeputusan.length < request.selected.length
+    ) {
+      throw new HttpException('Nilai Hasil Keputusan tidak ditemukan', 404);
+    }
+
+    const updateHasil = await this.prismaService.hasil.updateMany({
+      where: {
+        id: {
+          in: request.selected,
+        },
+      },
+      data: {
+        status: statusMap[request.status],
+      },
+    });
+    if (updateHasil.count == 0 || updateHasil.count < request.selected.length) {
+      throw new HttpException('Nilai Hasil Keputusan tidak ditemukan', 404);
+    }
+
+    return updateHasil;
   }
 }
