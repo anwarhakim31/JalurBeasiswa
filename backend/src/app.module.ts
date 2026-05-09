@@ -8,6 +8,7 @@ import { AlternativeModule } from './alternative/alternative.module';
 import { CriteriaModule } from './criteria/criteria.module';
 import { AlternativeValueModule } from './alternative-value/alternative-value.module';
 import { ProcessValuesModule } from './process-values/process-values.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ProcessValuesModule } from './process-values/process-values.module';
     CriteriaModule,
     AlternativeValueModule,
     ProcessValuesModule,
+    DashboardModule,
   ],
   controllers: [],
   providers: [],
