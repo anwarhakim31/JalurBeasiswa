@@ -9,6 +9,30 @@ datasource db {
 }
 
 
+model MasterData {
+  id String @id @default(cuid())
+
+  namaWebsite     String?
+  tagline         String?
+  deskripsi       String? @db.Text
+
+
+  logo            String?
+  favicon         String?
+  telpon          String?
+  email           String?
+  instagram       String?
+
+
+  unggahBerkas      Boolean @default(true)
+  bukaPendaftaran    Boolean @default(true)
+  modePemeliharaan     Boolean @default(false)
+
+  dibuatPada DateTime @default(now())
+  diubahPada DateTime @updatedAt
+}
+
+
 model Pengguna {
   nim          String      @id @unique @db.VarChar(32)
   email        String      @unique

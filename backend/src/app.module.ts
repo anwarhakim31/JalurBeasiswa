@@ -9,6 +9,7 @@ import { CriteriaModule } from './criteria/criteria.module';
 import { AlternativeValueModule } from './alternative-value/alternative-value.module';
 import { ProcessValuesModule } from './process-values/process-values.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { MasterDataModule } from './master-data/master-data.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     AlternativeValueModule,
     ProcessValuesModule,
     DashboardModule,
+    MasterDataModule,
   ],
   controllers: [],
   providers: [],

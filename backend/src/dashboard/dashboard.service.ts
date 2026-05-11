@@ -209,11 +209,14 @@ export class DashboardService {
 
           return {
             beasiswa: beasiswa.kodeBeasiswa,
-            total: beasiswa._count.kode,
+            total: beasiswa?._count.kode || 0,
             belumDinilai: beasiswaBelumDinilai
               ? beasiswaBelumDinilai._count.kode
               : 0,
-            dinilai: beasiswa._count.kode - beasiswaBelumDinilai._count.kode,
+            dinilai:
+              beasiswa?._count.kode ||
+              0 - beasiswaBelumDinilai?._count.kode ||
+              0,
           };
         }),
       },

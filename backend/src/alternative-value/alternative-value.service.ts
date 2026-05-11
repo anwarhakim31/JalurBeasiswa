@@ -231,6 +231,151 @@ export class AlternativeValueService {
       })),
     });
 
+    const statsData = await this.prismaService.nilaiAlternatif.groupBy({
+      by: ['kodeKriteria'],
+      where: {
+        alternatif: {
+          kodeBeasiswa: alternative.kodeBeasiswa,
+        },
+      },
+      _max: {
+        nilai: true,
+      },
+      _min: {
+        nilai: true,
+      },
+    });
+
+    const kriteria = await this.prismaService.kriteria.findMany({
+      where: {
+        kodeBeasiswa: alternative.kodeBeasiswa,
+      },
+      select: {
+        kode: true,
+        nama: true,
+        bobot: true,
+        tipe: true,
+      },
+    });
+
+    const stats = new Map<
+      string,
+      {
+        kodeKriteria: string;
+        namaKriteria: string;
+        bobot: number;
+        tipe: string;
+        max: number;
+        min: number;
+      }
+    >();
+
+    for (const k of kriteria) {
+      const stat = statsData.find((s) => s.kodeKriteria === k.kode);
+
+      stats.set(k.kode, {
+        kodeKriteria: k.kode,
+        namaKriteria: k.nama,
+        bobot: k.bobot,
+        tipe: k.tipe,
+        max: stat?._max.nilai ?? 0,
+        min: stat?._min.nilai ?? 0,
+      });
+    }
+
+    const alternatives = await this.prismaService.alternatif.findMany({
+      select: {
+        kode: true,
+        pengguna: {
+          select: {
+            namaLengkap: true,
+          },
+        },
+        nilaiAlternatif: {
+          select: {
+            kodeKriteria: true,
+            nilai: true,
+          },
+        },
+      },
+      orderBy: {
+        kode: 'asc',
+      },
+    });
+
+    const alternativesWithNilai = alternatives.map((alt) => {
+      const nilaiMap = new Map(
+        alt.nilaiAlternatif.map((n) => [n.kodeKriteria, n.nilai]),
+      );
+
+      const nilaiByKriteria = kriteria.reduce(
+        (acc, k) => {
+          const nilai =
+            k.tipe === 'Keuntungan'
+              ? nilaiMap.get(k.kode)
+                ? Number(
+                    (
+                      (nilaiMap.get(k.kode) / stats.get(k.kode)?.max) *
+                      k.bobot
+                    ).toFixed(3),
+                  )
+                : 0
+              : nilaiMap.get(k.kode)
+                ? Number(
+                    (
+                      (stats.get(k.kode)?.min / nilaiMap.get(k.kode)) *
+                      k.bobot
+                    ).toFixed(3),
+                  )
+                : 0;
+
+          acc[k.nama] = nilai;
+          acc.hasil += nilai;
+          return acc;
+        },
+        {
+          hasil: 0,
+        } as Record<string, number>,
+      );
+
+      return {
+        kode: alt.kode,
+        nama: alt.pengguna.namaLengkap,
+        hasil: Number(nilaiByKriteria.hasil.toFixed(3)),
+      };
+    });
+
+    const ranked = [...alternativesWithNilai]
+      .sort((a, b) => b.hasil - a.hasil)
+      .map((item, index) => ({
+        ...item,
+        peringkat: index + 1,
+      }));
+
+    await this.prismaService.$transaction(
+      ranked.map((alt) =>
+        this.prismaService.hasil.upsert({
+          where: {
+            kodeAlternatif_kodeBeasiswa: {
+              kodeBeasiswa: alternative.kodeBeasiswa,
+              kodeAlternatif: alt.kode,
+            },
+          },
+          create: {
+            id: nanoid(),
+            kodeBeasiswa: alternative.kodeBeasiswa,
+            kodeAlternatif: alt.kode,
+            nilai: alt.hasil,
+            peringkat: alt.peringkat,
+          },
+          update: {
+            nilai: alt.hasil,
+            peringkat: alt.peringkat,
+          },
+        }),
+      ),
+    );
+
     // ambil hasil
     const rows = await this.prismaService.nilaiAlternatif.findMany({
       where: {
@@ -321,6 +466,151 @@ export class AlternativeValueService {
         });
       }
     });
+
+    const statsData = await this.prismaService.nilaiAlternatif.groupBy({
+      by: ['kodeKriteria'],
+      where: {
+        alternatif: {
+          kodeBeasiswa: alternative.kodeBeasiswa,
+        },
+      },
+      _max: {
+        nilai: true,
+      },
+      _min: {
+        nilai: true,
+      },
+    });
+
+    const kriteria = await this.prismaService.kriteria.findMany({
+      where: {
+        kodeBeasiswa: alternative.kodeBeasiswa,
+      },
+      select: {
+        kode: true,
+        nama: true,
+        bobot: true,
+        tipe: true,
+      },
+    });
+
+    const stats = new Map<
+      string,
+      {
+        kodeKriteria: string;
+        namaKriteria: string;
+        bobot: number;
+        tipe: string;
+        max: number;
+        min: number;
+      }
+    >();
+
+    for (const k of kriteria) {
+      const stat = statsData.find((s) => s.kodeKriteria === k.kode);
+
+      stats.set(k.kode, {
+        kodeKriteria: k.kode,
+        namaKriteria: k.nama,
+        bobot: k.bobot,
+        tipe: k.tipe,
+        max: stat?._max.nilai ?? 0,
+        min: stat?._min.nilai ?? 0,
+      });
+    }
+
+    const alternatives = await this.prismaService.alternatif.findMany({
+      select: {
+        kode: true,
+        pengguna: {
+          select: {
+            namaLengkap: true,
+          },
+        },
+        nilaiAlternatif: {
+          select: {
+            kodeKriteria: true,
+            nilai: true,
+          },
+        },
+      },
+      orderBy: {
+        kode: 'asc',
+      },
+    });
+
+    const alternativesWithNilai = alternatives.map((alt) => {
+      const nilaiMap = new Map(
+        alt.nilaiAlternatif.map((n) => [n.kodeKriteria, n.nilai]),
+      );
+
+      const nilaiByKriteria = kriteria.reduce(
+        (acc, k) => {
+          const nilai =
+            k.tipe === 'Keuntungan'
+              ? nilaiMap.get(k.kode)
+                ? Number(
+                    (
+                      (nilaiMap.get(k.kode) / stats.get(k.kode)?.max) *
+                      k.bobot
+                    ).toFixed(3),
+                  )
+                : 0
+              : nilaiMap.get(k.kode)
+                ? Number(
+                    (
+                      (stats.get(k.kode)?.min / nilaiMap.get(k.kode)) *
+                      k.bobot
+                    ).toFixed(3),
+                  )
+                : 0;
+
+          acc[k.nama] = nilai;
+          acc.hasil += nilai;
+          return acc;
+        },
+        {
+          hasil: 0,
+        } as Record<string, number>,
+      );
+
+      return {
+        kode: alt.kode,
+        nama: alt.pengguna.namaLengkap,
+        hasil: Number(nilaiByKriteria.hasil.toFixed(3)),
+      };
+    });
+
+    const ranked = [...alternativesWithNilai]
+      .sort((a, b) => b.hasil - a.hasil)
+      .map((item, index) => ({
+        ...item,
+        peringkat: index + 1,
+      }));
+
+    await this.prismaService.$transaction(
+      ranked.map((alt) =>
+        this.prismaService.hasil.upsert({
+          where: {
+            kodeAlternatif_kodeBeasiswa: {
+              kodeBeasiswa: alternative.kodeBeasiswa,
+              kodeAlternatif: alt.kode,
+            },
+          },
+          create: {
+            id: nanoid(),
+            kodeBeasiswa: alternative.kodeBeasiswa,
+            kodeAlternatif: alt.kode,
+            nilai: alt.hasil,
+            peringkat: alt.peringkat,
+          },
+          update: {
+            nilai: alt.hasil,
+            peringkat: alt.peringkat,
+          },
+        }),
+      ),
+    );
 
     // ambil hasil terbaru
     const rows = await this.prismaService.nilaiAlternatif.findMany({
