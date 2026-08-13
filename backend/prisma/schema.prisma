@@ -12,16 +12,18 @@ datasource db {
 model MasterData {
   id String @id @default(cuid())
 
-  namaWebsite     String?
-  tagline         String?
-  deskripsi       String? @db.Text
+  namaWebsite     String
+  tagline         String
+  deskripsi       String @db.Text
 
 
-  logo            String?
+  logoUtama       String?
+  logoKedua       String?
   favicon         String?
   telpon          String?
   email           String?
   instagram       String?
+  websiteUtama    String?
 
 
   unggahBerkas      Boolean @default(true)
@@ -59,6 +61,8 @@ model Beasiswa {
   status       Boolean  @default(true)
 
   publikasi   Boolean @default(false)
+  tanggalMulai DateTime
+  tanggalSelesai DateTime
   alternatif  Alternatif[]
   kriteria   Kriteria[]
 

@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
@@ -11,6 +12,12 @@ import { MasterDataService } from './master-data.service';
 import { AuthGuard } from '../guards/auth.guard';
 import { AdminGuard } from '../guards/admin.guard';
 import { Response } from 'express';
+import {
+  MasterDataResponse,
+  ReqBasicInformation,
+  ReqcontactService,
+} from '../models/master-data.model';
+import { WebResponse } from '../models/web.model';
 
 @Controller('/api/master-data')
 export class MasterDataController {
@@ -124,5 +131,115 @@ export class MasterDataController {
       success: true,
       message: 'Berhasil menghapus semua data nilai alternatif',
     });
+  }
+
+  @Patch('/main-logo')
+  @HttpCode(200)
+  @UseGuards(AuthGuard, AdminGuard)
+  async MainLogo(
+    @Body() request: { logoUtama: string },
+    @Res() res: Response,
+  ): Promise<void> {
+    const result = await this.masterDataService.MainLogo(request);
+    res.json({
+      success: true,
+      message: 'Berhasil mengubah logo utama',
+      data: result,
+    });
+  }
+
+  @Patch('/secondary-logo')
+  @HttpCode(200)
+  @UseGuards(AuthGuard, AdminGuard)
+  async SecondaryLogo(
+    @Body() request: { logoKedua: string },
+    @Res() res: Response,
+  ): Promise<void> {
+    const result = await this.masterDataService.SecondaryLogo(request);
+    res.json({
+      success: true,
+      message: 'Berhasil mengubah logo kedua',
+      data: result,
+    });
+  }
+
+  @Patch('/favicon')
+  @HttpCode(200)
+  @UseGuards(AuthGuard, AdminGuard)
+  async Favicon(
+    @Body() request: { favicon: string },
+    @Res() res: Response,
+  ): Promise<void> {
+    const result = await this.masterDataService.Favicon(request);
+    res.json({
+      success: true,
+      message: 'Berhasil mengubah favicon',
+      data: result,
+    });
+  }
+
+  @Delete('/main-logo')
+  @HttpCode(200)
+  @UseGuards(AuthGuard, AdminGuard)
+  async DeleteMainLogo(@Res() res: Response): Promise<void> {
+    const result = await this.masterDataService.DeleteMainLogo();
+    res.json({
+      success: true,
+      message: 'Berhasil menghapus logo utama',
+      data: result,
+    });
+  }
+
+  @Delete('/secondary-logo')
+  @HttpCode(200)
+  @UseGuards(AuthGuard, AdminGuard)
+  async DeleteSecondaryLogo(@Res() res: Response): Promise<void> {
+    const result = await this.masterDataService.DeleteSecondaryLogo();
+    res.json({
+      success: true,
+      message: 'Berhasil menghapus logo kedua',
+      data: result,
+    });
+  }
+
+  @Delete('/favicon')
+  @HttpCode(200)
+  @UseGuards(AuthGuard, AdminGuard)
+  async DeleteFavicon(@Res() res: Response): Promise<void> {
+    const result = await this.masterDataService.DeleteFavicon();
+    res.json({
+      success: true,
+      message: 'Berhasil menghapus favicon',
+      data: result,
+    });
+  }
+
+  @HttpCode(200)
+  @UseGuards(AuthGuard)
+  @Patch('/basic-information')
+  async BasicInformation(
+    @Body() request: ReqBasicInformation,
+  ): Promise<WebResponse<MasterDataResponse>> {
+    const result = await this.masterDataService.BasicInformation(request);
+
+    return {
+      data: result as MasterDataResponse,
+      success: true,
+      message: 'Berhasil mengubah informasi dasar',
+    };
+  }
+
+  @HttpCode(200)
+  @UseGuards(AuthGuard)
+  @Patch('/contact-service')
+  async ContactService(
+    @Body() request: ReqcontactService,
+  ): Promise<WebResponse<MasterDataResponse>> {
+    const result = await this.masterDataService.ContactService(request);
+    return {
+      data: result as MasterDataResponse,
+      success: true,
+      message: 'Berhasil mengubah informasi layanan kontak',
+    };
   }
 }
