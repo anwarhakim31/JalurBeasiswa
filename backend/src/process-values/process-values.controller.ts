@@ -41,6 +41,32 @@ export class ProcessValuesController {
     });
   }
 
+  @Patch('/:kodeBeasiswa/save-ranking')
+  @HttpCode(200)
+  @UseGuards(AuthGuard, AdminGuard)
+  async saveRanking(
+    @Res() res: Response,
+    @Param('kodeBeasiswa') kodeBeasiswa: string,
+    @Body()
+    request: {
+      kode: string;
+      nilai: number;
+      peringkat: number;
+      namaLengkap: string;
+    }[],
+  ): Promise<void> {
+    const data = await this.processValuesService.SimpanPenilaian(
+      kodeBeasiswa,
+      request,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Berhasil menyimpan ranking',
+      data: data,
+    });
+  }
+
   @Get('/:kodeBeasiswa/ranking')
   @HttpCode(200)
   @UseGuards(AuthGuard, AdminGuard)

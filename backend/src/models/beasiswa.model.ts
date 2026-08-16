@@ -9,16 +9,18 @@ export class ReqPutBeasiswa {
   kode: string;
   nama: string;
   deskripsi: string;
-  periode: string;
   status: boolean;
+  tanggalMulai: Date;
+  tanggalSelesai: Date;
 }
 
 export class ReqPostBeasiswa {
   kode: string;
   nama: string;
   deskripsi: string;
-  periode: string;
   status: boolean;
+  tanggalMulai: Date;
+  tanggalSelesai: Date;
 }
 
 export class ReqDeleteBeasiswa {
@@ -30,8 +32,9 @@ export class BeasiswaResponse {
   kode: string;
   nama: string;
   deskripsi: string;
-  periode: string;
   status: boolean;
   publikasi?: boolean;
   dibuatPada?: Date;
+  tanggalMulai?: Date;
+  tanggalSelesai?: Date;
 }

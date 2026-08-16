@@ -146,7 +146,17 @@ export class BeasiswaController {
     @Body() request: ReqPutBeasiswa,
     @Param('kode') kode: string,
   ): Promise<WebResponse<BeasiswaResponse>> {
-    const res = await this.beasiswaService.update(request, kode);
+    const req = {
+      kode: request.kode,
+      nama: request.nama,
+      deskripsi: request.deskripsi,
+      status: request.status,
+
+      tanggalMulai: new Date(request.tanggalMulai),
+      tanggalSelesai: new Date(request.tanggalSelesai),
+    };
+
+    const res = await this.beasiswaService.update(req, kode);
     return {
       success: true,
       message: 'Berhasil mengubah data beasiswa',

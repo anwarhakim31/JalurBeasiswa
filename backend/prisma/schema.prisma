@@ -57,12 +57,12 @@ model Beasiswa {
   kode        String   @unique
   nama        String
   deskripsi   String
-  periode     String   // contoh: "2026"
+
   status       Boolean  @default(true)
 
   publikasi   Boolean @default(false)
-  tanggalMulai DateTime
-  tanggalSelesai DateTime
+  tanggalMulai DateTime  @default(now())
+  tanggalSelesai DateTime @default(now())
   alternatif  Alternatif[]
   kriteria   Kriteria[]
 

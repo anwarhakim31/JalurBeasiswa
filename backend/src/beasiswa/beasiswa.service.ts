@@ -44,12 +44,7 @@ export class BeasiswaService {
               mode: 'insensitive',
             },
           },
-          {
-            periode: {
-              contains: getReq.search,
-              mode: 'insensitive',
-            },
-          },
+
           {
             deskripsi: {
               contains: getReq.search,
@@ -66,6 +61,36 @@ export class BeasiswaService {
       });
     }
 
+    const oneResult = await this.prismaService.beasiswa.findMany({
+      where: {
+        AND: filter,
+      },
+      skip: (getReq.page - 1) * getReq.limit,
+      take: getReq.limit,
+      orderBy: {
+        kode: 'desc',
+      },
+    });
+    const date = new Date();
+
+    const newResult = oneResult.filter((item) => {
+      return {
+        ...item,
+        tanggalSelesai: item.tanggalSelesai > date,
+      };
+    });
+
+    await this.prismaService.beasiswa.updateMany({
+      where: {
+        id: {
+          in: newResult.map((item) => item.id),
+        },
+      },
+      data: {
+        publikasi: false,
+      },
+    });
+
     const result = await this.prismaService.beasiswa.findMany({
       where: {
         AND: filter,
@@ -80,8 +105,10 @@ export class BeasiswaService {
         kode: true,
         nama: true,
         deskripsi: true,
-        periode: true,
+
         status: true,
+        tanggalMulai: true,
+        tanggalSelesai: true,
         dibuatPada: true,
       },
     });
@@ -113,8 +140,9 @@ export class BeasiswaService {
         kode: true,
         nama: true,
         deskripsi: true,
-        periode: true,
         status: true,
+        tanggalMulai: true,
+        tanggalSelesai: true,
         dibuatPada: true,
       },
     });
@@ -188,7 +216,6 @@ export class BeasiswaService {
         kode: true,
         nama: true,
         deskripsi: true,
-        periode: true,
         status: true,
         publikasi: true,
         dibuatPada: true,
@@ -262,7 +289,6 @@ export class BeasiswaService {
     const isExist = await this.prismaService.beasiswa.findFirst({
       where: {
         nama: ReqPost.nama,
-        periode: ReqPost.periode,
       },
     });
 
@@ -279,17 +305,21 @@ export class BeasiswaService {
         kode: ReqPost.kode.toUpperCase(),
         nama: ReqPost.nama,
         deskripsi: ReqPost.deskripsi,
-        periode: ReqPost.periode,
+
         status: ReqPost.status,
+        tanggalMulai: ReqPost.tanggalMulai,
+        tanggalSelesai: ReqPost.tanggalSelesai,
       },
       select: {
         id: true,
         nama: true,
         kode: true,
         deskripsi: true,
-        periode: true,
+
         status: true,
         dibuatPada: true,
+        tanggalMulai: true,
+        tanggalSelesai: true,
       },
     });
 
@@ -298,9 +328,11 @@ export class BeasiswaService {
       kode: result.kode,
       nama: result.nama,
       deskripsi: result.deskripsi,
-      periode: result.periode,
+
       status: result.status,
       dibuatPada: result.dibuatPada,
+      tanggalMulai: result.tanggalMulai,
+      tanggalSelesai: result.tanggalSelesai,
     };
   }
   async update(
@@ -366,7 +398,7 @@ export class BeasiswaService {
     const isExist = await this.prismaService.beasiswa.findFirst({
       where: {
         nama: ReqPost.nama,
-        periode: ReqPost.periode,
+
         NOT: {
           kode: kode,
         },
@@ -388,8 +420,10 @@ export class BeasiswaService {
         nama: ReqPost.nama,
         deskripsi: ReqPost.deskripsi,
         kode: ReqPost.kode,
-        periode: ReqPost.periode,
+
         status: ReqPost.status,
+        tanggalMulai: ReqPost.tanggalMulai,
+        tanggalSelesai: ReqPost.tanggalSelesai,
       },
     });
 
@@ -398,9 +432,11 @@ export class BeasiswaService {
       kode: result.kode,
       nama: result.nama,
       deskripsi: result.deskripsi,
-      periode: result.periode,
+
       status: result.status,
       dibuatPada: result.dibuatPada,
+      tanggalMulai: result.tanggalMulai,
+      tanggalSelesai: result.tanggalSelesai,
     };
   }
   async delete(request: ReqDeleteBeasiswa) {
@@ -438,15 +474,32 @@ export class BeasiswaService {
       request,
     ) as { status: boolean };
 
-    const notFound = await this.prismaService.beasiswa.findUnique({
+    const found = await this.prismaService.beasiswa.findUnique({
       where: {
         kode: kode,
       },
     });
-    if (!notFound) {
+
+    if (!found) {
       throw new HttpException(
         'Beasiswa dengan id tersebut tidak ditemukan',
         404,
+      );
+    }
+
+    const date = new Date();
+
+    if (date.getTime() > found.tanggalSelesai.getTime() && reqStatus.status) {
+      throw new HttpException(
+        'Mengubah status gagal, Tanggal sudah melewati tanggal selesai',
+        400,
+      );
+    }
+
+    if (found.tanggalMulai.getTime() === found.tanggalSelesai.getTime()) {
+      throw new HttpException(
+        'Mengubah status gagal, Tanggal mulai dan selesai tidak boleh sama',
+        400,
       );
     }
 

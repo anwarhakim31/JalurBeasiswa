@@ -321,11 +321,61 @@ export class ProcessValuesService {
       };
     });
 
+    const alternativesWithNilai = alternatives.map((alt) => {
+      const nilaiMap = new Map(
+        alt.nilaiAlternatif.map((n) => [n.kodeKriteria, n.nilai]),
+      );
+
+      const nilaiByKriteria = kriteria.reduce(
+        (acc, k) => {
+          const nilai =
+            k.tipe === 'Keuntungan'
+              ? nilaiMap.get(k.kode)
+                ? Number(
+                    (
+                      (nilaiMap.get(k.kode) / stats.get(k.kode)?.max) *
+                      k.bobot
+                    ).toFixed(3),
+                  )
+                : 0
+              : nilaiMap.get(k.kode)
+                ? Number(
+                    (
+                      (stats.get(k.kode)?.min / nilaiMap.get(k.kode)) *
+                      k.bobot
+                    ).toFixed(3),
+                  )
+                : 0;
+
+          acc[k.nama] = nilai;
+          acc.hasil += nilai;
+          return acc;
+        },
+        {
+          hasil: 0,
+        } as Record<string, number>,
+      );
+
+      return {
+        kode: alt.kode,
+        nama: alt.pengguna.namaLengkap,
+        hasil: Number(nilaiByKriteria.hasil.toFixed(3)),
+      };
+    });
+
+    const ranked = [...alternativesWithNilai]
+      .sort((a, b) => b.hasil - a.hasil)
+      .map((item, index) => ({
+        kode: item.kode,
+        namaLengkap: item.nama,
+        nilai: item.hasil,
+        peringkat: index + 1,
+      }));
+
     return {
       beasiswa: {
         kode: beasiswa.kode,
         nama: beasiswa.nama,
-        periode: beasiswa.periode,
       },
 
       step1: {
@@ -402,6 +452,9 @@ export class ProcessValuesService {
       step6: {
         alternatif: step6Alternatives,
       },
+      step7: {
+        alternatif: ranked,
+      },
       pagging: {
         total: total || 0,
         page: page || 1,
@@ -409,6 +462,55 @@ export class ProcessValuesService {
         totalPage: Math.ceil(total / 100),
       },
     };
+  }
+
+  async SimpanPenilaian(
+    kodeBeasiswa: string,
+    result: {
+      kode: string;
+      namaLengkap: string;
+      peringkat: number;
+      nilai: number;
+    }[],
+  ) {
+    const beasiswa = await this.prismaService.beasiswa.findUnique({
+      where: {
+        kode: kodeBeasiswa,
+      },
+    });
+
+    if (!beasiswa) {
+      throw new HttpException(
+        'Beasiswa tidak ditemukan dengan kode tersebut',
+        404,
+      );
+    }
+
+    await this.prismaService.$transaction(
+      result.map((alt) =>
+        this.prismaService.hasil.upsert({
+          where: {
+            kodeAlternatif_kodeBeasiswa: {
+              kodeBeasiswa,
+              kodeAlternatif: alt.kode,
+            },
+          },
+          create: {
+            id: nanoid(),
+            kodeBeasiswa,
+            kodeAlternatif: alt.kode,
+            nilai: alt.nilai,
+            peringkat: alt.peringkat,
+          },
+          update: {
+            nilai: alt.nilai,
+            peringkat: alt.peringkat,
+          },
+        }),
+      ),
+    );
+
+    return true;
   }
 
   async ranking(kodeBeasiswa: string, search?: string, page?: number) {
@@ -481,98 +583,97 @@ export class ProcessValuesService {
       });
     }
 
-    const alternatives = await this.prismaService.alternatif.findMany({
-      select: {
-        kode: true,
-        pengguna: {
-          select: {
-            namaLengkap: true,
-          },
-        },
-        nilaiAlternatif: {
-          select: {
-            kodeKriteria: true,
-            nilai: true,
-          },
-        },
-      },
-      orderBy: {
-        kode: 'asc',
-      },
-    });
+    //   select: {
+    //     kode: true,
+    //     pengguna: {
+    //       select: {
+    //         namaLengkap: true,
+    //       },
+    //     },
+    //     nilaiAlternatif: {
+    //       select: {
+    //         kodeKriteria: true,
+    //         nilai: true,
+    //       },
+    //     },
+    //   },
+    //   orderBy: {
+    //     kode: 'asc',
+    //   },
+    // });
 
-    const alternativesWithNilai = alternatives.map((alt) => {
-      const nilaiMap = new Map(
-        alt.nilaiAlternatif.map((n) => [n.kodeKriteria, n.nilai]),
-      );
+    // const alternativesWithNilai = alternatives.map((alt) => {
+    //   const nilaiMap = new Map(
+    //     alt.nilaiAlternatif.map((n) => [n.kodeKriteria, n.nilai]),
+    //   );
 
-      const nilaiByKriteria = kriteria.reduce(
-        (acc, k) => {
-          const nilai =
-            k.tipe === 'Keuntungan'
-              ? nilaiMap.get(k.kode)
-                ? Number(
-                    (
-                      (nilaiMap.get(k.kode) / stats.get(k.kode)?.max) *
-                      k.bobot
-                    ).toFixed(3),
-                  )
-                : 0
-              : nilaiMap.get(k.kode)
-                ? Number(
-                    (
-                      (stats.get(k.kode)?.min / nilaiMap.get(k.kode)) *
-                      k.bobot
-                    ).toFixed(3),
-                  )
-                : 0;
+    //   const nilaiByKriteria = kriteria.reduce(
+    //     (acc, k) => {
+    //       const nilai =
+    //         k.tipe === 'Keuntungan'
+    //           ? nilaiMap.get(k.kode)
+    //             ? Number(
+    //                 (
+    //                   (nilaiMap.get(k.kode) / stats.get(k.kode)?.max) *
+    //                   k.bobot
+    //                 ).toFixed(3),
+    //               )
+    //             : 0
+    //           : nilaiMap.get(k.kode)
+    //             ? Number(
+    //                 (
+    //                   (stats.get(k.kode)?.min / nilaiMap.get(k.kode)) *
+    //                   k.bobot
+    //                 ).toFixed(3),
+    //               )
+    //             : 0;
 
-          acc[k.nama] = nilai;
-          acc.hasil += nilai;
-          return acc;
-        },
-        {
-          hasil: 0,
-        } as Record<string, number>,
-      );
+    //       acc[k.nama] = nilai;
+    //       acc.hasil += nilai;
+    //       return acc;
+    //     },
+    //     {
+    //       hasil: 0,
+    //     } as Record<string, number>,
+    //   );
 
-      return {
-        kode: alt.kode,
-        nama: alt.pengguna.namaLengkap,
-        hasil: Number(nilaiByKriteria.hasil.toFixed(3)),
-      };
-    });
+    //   return {
+    //     kode: alt.kode,
+    //     nama: alt.pengguna.namaLengkap,
+    //     hasil: Number(nilaiByKriteria.hasil.toFixed(3)),
+    //   };
+    // });
 
-    const ranked = [...alternativesWithNilai]
-      .sort((a, b) => b.hasil - a.hasil)
-      .map((item, index) => ({
-        ...item,
-        peringkat: index + 1,
-      }));
+    // const ranked = [...alternativesWithNilai]
+    //   .sort((a, b) => b.hasil - a.hasil)
+    //   .map((item, index) => ({
+    //     ...item,
+    //     peringkat: index + 1,
+    //   }));
 
-    await this.prismaService.$transaction(
-      ranked.map((alt) =>
-        this.prismaService.hasil.upsert({
-          where: {
-            kodeAlternatif_kodeBeasiswa: {
-              kodeBeasiswa,
-              kodeAlternatif: alt.kode,
-            },
-          },
-          create: {
-            id: nanoid(),
-            kodeBeasiswa,
-            kodeAlternatif: alt.kode,
-            nilai: alt.hasil,
-            peringkat: alt.peringkat,
-          },
-          update: {
-            nilai: alt.hasil,
-            peringkat: alt.peringkat,
-          },
-        }),
-      ),
-    );
+    // await this.prismaService.$transaction(
+    //   ranked.map((alt) =>
+    //     this.prismaService.hasil.upsert({
+    //       where: {
+    //         kodeAlternatif_kodeBeasiswa: {
+    //           kodeBeasiswa,
+    //           kodeAlternatif: alt.kode,
+    //         },
+    //       },
+    //       create: {
+    //         id: nanoid(),
+    //         kodeBeasiswa,
+    //         kodeAlternatif: alt.kode,
+    //         nilai: alt.hasil,
+    //         peringkat: alt.peringkat,
+    //       },
+    //       update: {
+    //         nilai: alt.hasil,
+    //         peringkat: alt.peringkat,
+    //       },
+    //     }),
+    //   ),
+    // );
     const filter = [];
 
     if (search) {
@@ -635,7 +736,6 @@ export class ProcessValuesService {
       beasiswa: {
         kode: beasiswa.kode,
         nama: beasiswa.nama,
-        periode: beasiswa.periode,
         publikasi: beasiswa.publikasi,
       },
       ranking: alternatif.map((x) => ({
